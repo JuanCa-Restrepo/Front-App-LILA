@@ -174,6 +174,10 @@ class _HomePageState extends State<HomePage> {
                             value: 'Ayuda',
                             child: Text('Ayuda'),
                           ),
+                            PopupMenuItem(
+                            value: 'PQRS',
+                            child: Text('PQRS'),
+                          ),
                         ],
                         child: Container(
                           width: 46,
