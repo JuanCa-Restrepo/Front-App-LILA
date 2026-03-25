@@ -1,11 +1,6 @@
 import 'package:flutter/material.dart';
 import 'report_case_step2_page.dart';
 
-/// ===========================================================
-/// REPORT CASE STEP 1 PAGE
-/// Pantalla visual para el primer paso de reporte de caso.
-/// Solo UI con estado local para selección visual.
-/// ===========================================================
 class ReportCaseStep1Page extends StatefulWidget {
   const ReportCaseStep1Page({super.key});
 
@@ -15,7 +10,10 @@ class ReportCaseStep1Page extends StatefulWidget {
 
 class _ReportCaseStep1PageState extends State<ReportCaseStep1Page> {
   PersonType selectedPerson = PersonType.adolescente;
-  String? selectedOrientation;
+
+  String? selectedBiologicalSex;
+  final TextEditingController orientationController = TextEditingController();
+
   bool isChatExpanded = false;
   int selectedBottomIndex = -1;
 
@@ -31,6 +29,12 @@ class _ReportCaseStep1PageState extends State<ReportCaseStep1Page> {
         isChatExpanded = false;
       });
     }
+  }
+
+  @override
+  void dispose() {
+    orientationController.dispose();
+    super.dispose();
   }
 
   @override
@@ -64,7 +68,20 @@ class _ReportCaseStep1PageState extends State<ReportCaseStep1Page> {
                     _buildHeader(titleSize),
                     SizedBox(height: sectionGap * 1.05),
                     _buildPersonSelector(w),
+
                     SizedBox(height: sectionGap * 1.25),
+                    Text(
+                      "Sexo biológico",
+                      style: TextStyle(
+                        fontSize: labelSize,
+                        fontWeight: FontWeight.w600,
+                        color: Colors.black87,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    _buildBiologicalSexDropdown(w),
+
+                    SizedBox(height: sectionGap * 1.2),
                     Text(
                       "Orientación sexual",
                       style: TextStyle(
@@ -74,9 +91,8 @@ class _ReportCaseStep1PageState extends State<ReportCaseStep1Page> {
                       ),
                     ),
                     const SizedBox(height: 8),
-                    _buildDropdown(w),
-                    SizedBox(height: sectionGap * 1.2),
-                    _buildPreviewCard(h),
+                    _buildOrientationTextField(),
+
                     SizedBox(height: sectionGap * 1.4),
                     Center(
                       child: SizedBox(
@@ -182,7 +198,9 @@ class _ReportCaseStep1PageState extends State<ReportCaseStep1Page> {
                   color: isSelected ? Colors.grey.shade300 : Colors.transparent,
                   borderRadius: BorderRadius.circular(18),
                   border: Border.all(
-                    color: isSelected ? Colors.grey.shade400 : Colors.transparent,
+                    color: isSelected
+                        ? Colors.grey.shade400
+                        : Colors.transparent,
                   ),
                 ),
                 child: Column(
@@ -223,9 +241,9 @@ class _ReportCaseStep1PageState extends State<ReportCaseStep1Page> {
     );
   }
 
-  Widget _buildDropdown(double w) {
+  Widget _buildBiologicalSexDropdown(double w) {
     return DropdownButtonFormField<String>(
-      value: selectedOrientation,
+      value: selectedBiologicalSex,
       icon: const Icon(Icons.keyboard_arrow_down_rounded, size: 34),
       dropdownColor: Colors.white,
       style: TextStyle(
@@ -259,32 +277,42 @@ class _ReportCaseStep1PageState extends State<ReportCaseStep1Page> {
       items: const [
         DropdownMenuItem(value: "Masculino", child: Text("Masculino")),
         DropdownMenuItem(value: "Femenino", child: Text("Femenino")),
-        DropdownMenuItem(value: "Otro", child: Text("Otro")),
+        DropdownMenuItem(value: "Intersexual", child: Text("Intersexual")),
       ],
       onChanged: (value) {
         setState(() {
-          selectedOrientation = value;
+          selectedBiologicalSex = value;
         });
       },
     );
   }
 
-  Widget _buildPreviewCard(double h) {
-    return Container(
-      width: double.infinity,
-      height: (h * 0.34).clamp(230.0, 300.0),
-      decoration: BoxDecoration(
-        color: Colors.grey.shade300,
-        borderRadius: BorderRadius.circular(34),
-      ),
-      child: Center(
-        child: Text(
-          selectedPerson.label,
-          style: const TextStyle(
-            fontSize: 20,
-            fontWeight: FontWeight.w700,
-            color: Colors.black87,
-          ),
+  Widget _buildOrientationTextField() {
+    return TextField(
+      controller: orientationController,
+      decoration: InputDecoration(
+        hintText: "Escribe la orientación sexual",
+        hintStyle: const TextStyle(
+          color: Colors.black54,
+          fontWeight: FontWeight.w500,
+        ),
+        filled: true,
+        fillColor: Colors.grey.shade300,
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: 18,
+          vertical: 16,
+        ),
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(24),
+          borderSide: BorderSide.none,
+        ),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(24),
+          borderSide: BorderSide.none,
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(24),
+          borderSide: BorderSide.none,
         ),
       ),
     );
