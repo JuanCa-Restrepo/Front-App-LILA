@@ -1,6 +1,6 @@
-import '../../domain/entities/usuario.dart';
 import '../../domain/repositories/usuario_repository.dart';
 import '../datasources/usuario_remote_datasource.dart';
+import '../models/usuario_model.dart';
 
 class UsuarioRepositoryImpl implements UsuarioRepository {
   final UsuarioRemoteDatasource _remote;
@@ -8,7 +8,7 @@ class UsuarioRepositoryImpl implements UsuarioRepository {
   const UsuarioRepositoryImpl(this._remote);
 
   @override
-  Future<Usuario> registerWithDevice({
+  Future<UsuarioModel> registerWithDevice({
     required String deviceId,
     String? cedula,
     String? telefono,
@@ -29,5 +29,5 @@ class UsuarioRepositoryImpl implements UsuarioRepository {
   }
 
   @override
-  Future<List<Usuario>> fetchAll() => _remote.fetchAll();
+  Future<List<UsuarioModel>> fetchAll() => _remote.fetchAll();
 }

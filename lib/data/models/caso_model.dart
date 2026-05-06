@@ -1,17 +1,30 @@
-import '../../domain/entities/caso.dart';
+/// Caso reportado por un usuario.
+///
+/// El campo `codigoCaso` viaja en texto plano (no hasheado) y es lo que
+/// la persona usa para consultar el estado posteriormente.
+class CasoModel {
+  final String idCaso;
+  final String idUsuario;
+  final int idTipoAcoso;
+  final String? idResponsable;
+  final String codigoCaso;
+  final bool pasoInstitucion;
+  final String? descripcion;
+  final String estado;
+  final DateTime? fechaReporte;
+  final DateTime? fechaActualizacion;
 
-class CasoModel extends Caso {
   const CasoModel({
-    required super.idCaso,
-    required super.idUsuario,
-    required super.idTipoAcoso,
-    super.idResponsable,
-    required super.codigoCaso,
-    required super.pasoInstitucion,
-    super.descripcion,
-    super.estado,
-    super.fechaReporte,
-    super.fechaActualizacion,
+    required this.idCaso,
+    required this.idUsuario,
+    required this.idTipoAcoso,
+    this.idResponsable,
+    required this.codigoCaso,
+    required this.pasoInstitucion,
+    this.descripcion,
+    this.estado = 'pendiente',
+    this.fechaReporte,
+    this.fechaActualizacion,
   });
 
   factory CasoModel.fromJson(Map<String, dynamic> json) {

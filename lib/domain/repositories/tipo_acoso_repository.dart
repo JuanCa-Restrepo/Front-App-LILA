@@ -1,6 +1,6 @@
-import '../entities/tipo_acoso.dart';
+import '../../data/models/tipo_acoso_model.dart';
 
 abstract class TipoAcosoRepository {
   /// Trae el catálogo de tipos de acoso desde el backend.
-  Future<List<TipoAcoso>> fetchAll();
+  Future<List<TipoAcosoModel>> fetchAll();
 }

@@ -1,12 +1,17 @@
-import '../../domain/entities/responsable.dart';
+/// Profesional asignado al seguimiento de un caso.
+class ResponsableModel {
+  final String idResponsable;
+  final String nombre;
+  final String? cargo;
+  final String? correoEmail;
+  final String? telefono;
 
-class ResponsableModel extends Responsable {
   const ResponsableModel({
-    required super.idResponsable,
-    required super.nombre,
-    super.cargo,
-    super.correoEmail,
-    super.telefono,
+    required this.idResponsable,
+    required this.nombre,
+    this.cargo,
+    this.correoEmail,
+    this.telefono,
   });
 
   factory ResponsableModel.fromJson(Map<String, dynamic> json) {

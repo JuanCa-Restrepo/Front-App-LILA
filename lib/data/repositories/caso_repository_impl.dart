@@ -1,7 +1,7 @@
 import '../../core/errors/app_exceptions.dart';
-import '../../domain/entities/caso.dart';
 import '../../domain/repositories/caso_repository.dart';
 import '../datasources/caso_remote_datasource.dart';
+import '../models/caso_model.dart';
 
 class CasoRepositoryImpl implements CasoRepository {
   final CasoRemoteDatasource _remote;
@@ -30,19 +30,16 @@ class CasoRepositoryImpl implements CasoRepository {
   }
 
   @override
-  Future<Caso?> findByCodigo(String codigoCaso) async {
+  Future<CasoModel?> findByCodigo(String codigoCaso) async {
     try {
       return await _remote.fetchByCodigo(codigoCaso);
     } on NotFoundException {
-      // El backend devuelve 404 cuando el código no existe; lo
-      // traducimos a `null` para que la UI pueda mostrar
-      // "Código no registrado" sin tratarlo como un fallo de red.
       return null;
     }
   }
 
   @override
-  Future<Caso?> findById(String idCaso) async {
+  Future<CasoModel?> findById(String idCaso) async {
     try {
       return await _remote.fetchById(idCaso);
     } on NotFoundException {
@@ -51,5 +48,5 @@ class CasoRepositoryImpl implements CasoRepository {
   }
 
   @override
-  Future<List<Caso>> fetchAll() => _remote.fetchAll();
+  Future<List<CasoModel>> fetchAll() => _remote.fetchAll();
 }

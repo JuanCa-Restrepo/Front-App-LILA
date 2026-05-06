@@ -1,12 +1,12 @@
-import '../entities/evidencia.dart';
+import '../../data/models/evidencia_model.dart';
 
 abstract class EvidenciaRepository {
   /// Registra una evidencia. La URL ya debe estar alojada (Google Drive).
-  Future<Evidencia> attachEvidence({
+  Future<EvidenciaModel> attachEvidence({
     required String idCaso,
     required String tipoArchivo,
     required String urlArchivo,
   });
 
-  Future<List<Evidencia>> fetchByCase(String idCaso);
+  Future<List<EvidenciaModel>> fetchByCase(String idCaso);
 }

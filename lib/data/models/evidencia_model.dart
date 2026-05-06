@@ -1,12 +1,20 @@
-import '../../domain/entities/evidencia.dart';
+/// Evidencia (archivo) adjunta a un caso.
+///
+/// `urlArchivo` apunta al recurso ya alojado en Google Drive — el
+/// backend nunca recibe el binario, solo la URL pública resultante.
+class EvidenciaModel {
+  final String idEvidencia;
+  final String idCaso;
+  final String? tipoArchivo;
+  final String urlArchivo;
+  final DateTime? fechaSubida;
 
-class EvidenciaModel extends Evidencia {
   const EvidenciaModel({
-    required super.idEvidencia,
-    required super.idCaso,
-    super.tipoArchivo,
-    required super.urlArchivo,
-    super.fechaSubida,
+    required this.idEvidencia,
+    required this.idCaso,
+    this.tipoArchivo,
+    required this.urlArchivo,
+    this.fechaSubida,
   });
 
   factory EvidenciaModel.fromJson(Map<String, dynamic> json) {

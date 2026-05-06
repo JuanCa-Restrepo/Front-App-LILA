@@ -1,4 +1,4 @@
-import '../entities/usuario.dart';
+import '../../data/models/usuario_model.dart';
 
 /// Contrato del repositorio de usuarios.
 ///
@@ -7,7 +7,7 @@ import '../entities/usuario.dart';
 abstract class UsuarioRepository {
   /// Crea un usuario en el backend a partir del `deviceId` actual.
   /// Devuelve el usuario completo (con su `idUsuario` UUID generado).
-  Future<Usuario> registerWithDevice({
+  Future<UsuarioModel> registerWithDevice({
     required String deviceId,
     String? cedula,
     String? telefono,
@@ -18,5 +18,5 @@ abstract class UsuarioRepository {
   });
 
   /// Lista todos los usuarios — útil principalmente para depuración.
-  Future<List<Usuario>> fetchAll();
+  Future<List<UsuarioModel>> fetchAll();
 }

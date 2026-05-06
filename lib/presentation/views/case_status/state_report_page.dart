@@ -2,9 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 
-import '../../../domain/entities/caso.dart';
-import '../../../domain/entities/evidencia.dart';
-import '../../../domain/entities/responsable.dart';
+import '../../../data/models/caso_model.dart';
+import '../../../data/models/evidencia_model.dart';
+import '../../../data/models/responsable_model.dart';
 import '../../viewmodels/case_status_viewmodel.dart';
 import '../../widgets/app_bottom_bar.dart';
 import '../../widgets/side_chat.dart';
@@ -199,7 +199,7 @@ class _StatusCard extends StatelessWidget {
 }
 
 class _ResponsibleCard extends StatelessWidget {
-  final Responsable? responsable;
+  final ResponsableModel? responsable;
 
   const _ResponsibleCard({required this.responsable});
 
@@ -254,7 +254,7 @@ class _ResponsibleCard extends StatelessWidget {
 }
 
 class _Timeline extends StatelessWidget {
-  final Caso caso;
+  final CasoModel caso;
   final double screenWidth;
 
   const _Timeline({required this.caso, required this.screenWidth});
@@ -345,7 +345,7 @@ class _TimelineEntry {
 }
 
 class _EvidencesSection extends StatelessWidget {
-  final List<Evidencia> evidencias;
+  final List<EvidenciaModel> evidencias;
 
   const _EvidencesSection({required this.evidencias});
 

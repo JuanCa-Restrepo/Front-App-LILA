@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
-import '../../../domain/entities/tipo_acoso.dart';
+import '../../../data/models/tipo_acoso_model.dart';
 import '../../viewmodels/report_case_viewmodel.dart';
 import '../../viewmodels/tipo_acoso_viewmodel.dart';
 import '../../widgets/app_bottom_bar.dart';
@@ -138,7 +138,7 @@ class _ReportCaseStep2PageState extends State<ReportCaseStep2Page> {
 }
 
 class _SituationDropdown extends StatelessWidget {
-  final List<TipoAcoso> items;
+  final List<TipoAcosoModel> items;
   final int? selectedId;
   final ValueChanged<int?> onChanged;
   final double screenWidth;

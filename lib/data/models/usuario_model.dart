@@ -1,21 +1,31 @@
-import '../../domain/entities/usuario.dart';
-
-/// Modelo de transporte para `Usuario`.
+/// Modelo de usuario de LILA.
 ///
+/// Combina la entidad de dominio con las capacidades de serialización JSON.
 /// Mantiene exactamente los nombres de campos que devuelve el backend
 /// (`idUsuario`, `correoEmail`, etc.) para evitar dobles mapeos.
-class UsuarioModel extends Usuario {
+class UsuarioModel {
+  final String idUsuario;
+  final String? cedula;
+  final String? telefono;
+  final DateTime? fechaRegistro;
+  final bool estado;
+  final String? sexoBiologico;
+  final String? orientacionGenero;
+  final String? correoEmail;
+  final String? tipoUsuario;
+  final String? deviceId;
+
   const UsuarioModel({
-    required super.idUsuario,
-    super.cedula,
-    super.telefono,
-    super.fechaRegistro,
-    super.estado,
-    super.sexoBiologico,
-    super.orientacionGenero,
-    super.correoEmail,
-    super.tipoUsuario,
-    super.deviceId,
+    required this.idUsuario,
+    this.cedula,
+    this.telefono,
+    this.fechaRegistro,
+    this.estado = true,
+    this.sexoBiologico,
+    this.orientacionGenero,
+    this.correoEmail,
+    this.tipoUsuario,
+    this.deviceId,
   });
 
   /// Construye el modelo a partir de la respuesta JSON del backend.

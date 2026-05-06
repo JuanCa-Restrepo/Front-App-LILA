@@ -7,7 +7,7 @@ class ApiConstants {
   ApiConstants._();
 
   /// IP del PC donde corre el backend Node + puerto Express.
-  static const String host = 'http://192.168.1.13:3000';
+  static const String host = 'http://10.6.209.230:3000';
 
   /// Prefijo común a todas las rutas REST.
   static const String apiPrefix = '/api';

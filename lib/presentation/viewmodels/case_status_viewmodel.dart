@@ -1,6 +1,6 @@
-import '../../domain/entities/caso.dart';
-import '../../domain/entities/evidencia.dart';
-import '../../domain/entities/responsable.dart';
+import '../../data/models/caso_model.dart';
+import '../../data/models/evidencia_model.dart';
+import '../../data/models/responsable_model.dart';
 import '../../domain/repositories/caso_repository.dart';
 import '../../domain/repositories/evidencia_repository.dart';
 import '../../domain/repositories/responsable_repository.dart';
@@ -8,9 +8,9 @@ import 'base_view_model.dart';
 
 /// Estado consolidado de un caso para la pantalla "Estado del Radicado".
 class CaseStatusSnapshot {
-  final Caso caso;
-  final Responsable? responsable;
-  final List<Evidencia> evidencias;
+  final CasoModel caso;
+  final ResponsableModel? responsable;
+  final List<EvidenciaModel> evidencias;
 
   const CaseStatusSnapshot({
     required this.caso,
@@ -58,7 +58,7 @@ class CaseStatusViewModel extends BaseViewModel {
       final caso = await _casoRepository.findByCodigo(trimmed);
       if (caso == null) return null;
 
-      Responsable? responsable;
+      ResponsableModel? responsable;
       if (caso.idResponsable != null && caso.idResponsable!.isNotEmpty) {
         responsable =
             await _responsableRepository.fetchById(caso.idResponsable!);
@@ -75,7 +75,6 @@ class CaseStatusViewModel extends BaseViewModel {
     });
 
     if (result == null) {
-      // Si no hubo error real (errorMessage == null) entonces fue 404.
       if (errorMessage == null) {
         _codeNotFound = true;
         notifyListeners();

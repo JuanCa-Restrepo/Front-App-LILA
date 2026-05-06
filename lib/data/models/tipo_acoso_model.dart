@@ -1,9 +1,11 @@
-import '../../domain/entities/tipo_acoso.dart';
+/// Catálogo de tipos de acoso disponibles en el sistema.
+class TipoAcosoModel {
+  final int idTipoAcoso;
+  final String descripcion;
 
-class TipoAcosoModel extends TipoAcoso {
   const TipoAcosoModel({
-    required super.idTipoAcoso,
-    required super.descripcion,
+    required this.idTipoAcoso,
+    required this.descripcion,
   });
 
   factory TipoAcosoModel.fromJson(Map<String, dynamic> json) {

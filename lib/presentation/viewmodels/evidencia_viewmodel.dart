@@ -1,5 +1,5 @@
 import '../../core/services/google_drive_uploader.dart';
-import '../../domain/entities/evidencia.dart';
+import '../../data/models/evidencia_model.dart';
 import '../../domain/repositories/evidencia_repository.dart';
 import 'base_view_model.dart';
 
@@ -17,8 +17,8 @@ class EvidenciaViewModel extends BaseViewModel {
   })  : _repository = repository,
         _driveUploader = driveUploader;
 
-  Evidencia? _lastUploaded;
-  Evidencia? get lastUploaded => _lastUploaded;
+  EvidenciaModel? _lastUploaded;
+  EvidenciaModel? get lastUploaded => _lastUploaded;
 
   /// Sube `localPath` a Drive y registra la evidencia contra `idCaso`.
   Future<bool> uploadAndAttach({
@@ -27,7 +27,7 @@ class EvidenciaViewModel extends BaseViewModel {
     required String tipoArchivo,
     String? fileName,
   }) async {
-    final result = await guard<Evidencia>(() async {
+    final result = await guard<EvidenciaModel>(() async {
       final url = await _driveUploader.upload(
         localPath: localPath,
         tipoArchivo: tipoArchivo,

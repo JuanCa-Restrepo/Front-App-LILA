@@ -1,4 +1,4 @@
-import '../../domain/entities/tipo_acoso.dart';
+import '../../data/models/tipo_acoso_model.dart';
 import '../../domain/repositories/tipo_acoso_repository.dart';
 import 'base_view_model.dart';
 
@@ -11,14 +11,14 @@ class TipoAcosoViewModel extends BaseViewModel {
 
   TipoAcosoViewModel(this._repository);
 
-  List<TipoAcoso> _items = const [];
-  List<TipoAcoso> get items => _items;
+  List<TipoAcosoModel> _items = const [];
+  List<TipoAcosoModel> get items => _items;
 
   bool get isLoaded => _items.isNotEmpty;
 
   Future<void> load({bool force = false}) async {
     if (isLoaded && !force) return;
-    final result = await guard<List<TipoAcoso>>(() {
+    final result = await guard<List<TipoAcosoModel>>(() {
       return _repository.fetchAll();
     });
     if (result != null) {

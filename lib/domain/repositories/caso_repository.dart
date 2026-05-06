@@ -1,4 +1,4 @@
-import '../entities/caso.dart';
+import '../../data/models/caso_model.dart';
 
 /// Resultado de la creación de un caso: el código en texto plano que el
 /// usuario debe guardar para poder consultar el estado.
@@ -24,9 +24,9 @@ abstract class CasoRepository {
 
   /// Recupera el caso por su código plano (`#XX-XXXXX`).
   /// Devuelve `null` si no existe.
-  Future<Caso?> findByCodigo(String codigoCaso);
+  Future<CasoModel?> findByCodigo(String codigoCaso);
 
-  Future<Caso?> findById(String idCaso);
+  Future<CasoModel?> findById(String idCaso);
 
-  Future<List<Caso>> fetchAll();
+  Future<List<CasoModel>> fetchAll();
 }

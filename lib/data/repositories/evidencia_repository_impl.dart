@@ -1,6 +1,6 @@
-import '../../domain/entities/evidencia.dart';
 import '../../domain/repositories/evidencia_repository.dart';
 import '../datasources/evidencia_remote_datasource.dart';
+import '../models/evidencia_model.dart';
 
 class EvidenciaRepositoryImpl implements EvidenciaRepository {
   final EvidenciaRemoteDatasource _remote;
@@ -8,7 +8,7 @@ class EvidenciaRepositoryImpl implements EvidenciaRepository {
   const EvidenciaRepositoryImpl(this._remote);
 
   @override
-  Future<Evidencia> attachEvidence({
+  Future<EvidenciaModel> attachEvidence({
     required String idCaso,
     required String tipoArchivo,
     required String urlArchivo,
@@ -21,6 +21,6 @@ class EvidenciaRepositoryImpl implements EvidenciaRepository {
   }
 
   @override
-  Future<List<Evidencia>> fetchByCase(String idCaso) =>
+  Future<List<EvidenciaModel>> fetchByCase(String idCaso) =>
       _remote.fetchByCase(idCaso);
 }
