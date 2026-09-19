@@ -2,14 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../../viewmodels/report_case_viewmodel.dart';
-import '../../widgets/app_bottom_bar.dart';
-import '../../widgets/primary_action_button.dart';
-import '../../widgets/progress_header.dart';
-import '../../widgets/side_chat.dart';
+import '../onboarding/onboarding_style.dart';
 import 'report_case_step2_page.dart';
+import 'report_step_layout.dart';
 
-/// Paso 1 — datos del afectado: tipo de persona, sexo biológico,
-/// orientación sexual.
+/// Paso 1: perfil básico de la persona afectada.
 class ReportCaseStep1Page extends StatefulWidget {
   const ReportCaseStep1Page({super.key});
 
@@ -23,9 +20,8 @@ class _ReportCaseStep1PageState extends State<ReportCaseStep1Page> {
   @override
   void initState() {
     super.initState();
-    final vm = context.read<ReportCaseViewModel>();
     _orientationController = TextEditingController(
-      text: vm.orientacionGenero ?? '',
+      text: context.read<ReportCaseViewModel>().orientacionGenero ?? '',
     );
   }
 
@@ -36,270 +32,242 @@ class _ReportCaseStep1PageState extends State<ReportCaseStep1Page> {
   }
 
   void _goNext() {
-    final vm = context.read<ReportCaseViewModel>();
-    vm.setOrientacionGenero(_orientationController.text.trim());
+    context.read<ReportCaseViewModel>().setOrientacionGenero(
+      _orientationController.text.trim(),
+    );
+    FocusScope.of(context).unfocus();
     Navigator.push(
       context,
       MaterialPageRoute(builder: (_) => const ReportCaseStep2Page()),
     );
   }
 
+  void _showHelp() => showReportHelp(
+    context,
+    title: 'Información de la persona afectada',
+    child: const Text(
+      'Estos datos nos ayudan a orientar mejor el reporte. Puedes indicar la etapa de vida, el sexo biológico y la orientación sexual. La información se mantiene protegida durante el proceso.',
+      style: reportSecondaryStyle,
+    ),
+  );
+
   @override
-  Widget build(BuildContext context) {
-    final size = MediaQuery.of(context).size;
-    final w = size.width;
-    final h = size.height;
-
-    final horizontalPadding = (w * 0.08).clamp(20.0, 34.0);
-    final sectionGap = (h * 0.025).clamp(14.0, 24.0);
-    final titleSize = (w * 0.043).clamp(15.0, 18.0);
-    final labelSize = (w * 0.038).clamp(13.0, 16.0);
-
-    return Scaffold(
-      backgroundColor: const Color(0xFFF5F5F5),
-      body: SafeArea(
-        child: Stack(
-          children: [
-            SingleChildScrollView(
-              padding: EdgeInsets.fromLTRB(
-                horizontalPadding, 14, horizontalPadding, 150,
-              ),
-              child: Consumer<ReportCaseViewModel>(
-                builder: (_, vm, __) {
-                  return Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const ProgressHeader(progress: 0.28),
-                      const SizedBox(height: 14),
-                      Text(
-                        'Paso 1: Cuéntanos sobre el afectado',
-                        style: TextStyle(
-                          fontSize: titleSize,
-                          fontWeight: FontWeight.w600,
-                          color: Colors.black87,
-                        ),
-                      ),
-                      SizedBox(height: sectionGap * 1.05),
-                      _PersonSelector(
-                        selected: vm.personType,
-                        onChanged: vm.setPersonType,
-                        screenWidth: w,
-                      ),
-                      SizedBox(height: sectionGap * 1.25),
-                      Text(
-                        'Sexo biológico',
-                        style: TextStyle(
-                          fontSize: labelSize,
-                          fontWeight: FontWeight.w600,
-                          color: Colors.black87,
-                        ),
-                      ),
-                      const SizedBox(height: 8),
-                      _BiologicalSexDropdown(
-                        value: vm.sexoBiologico,
-                        onChanged: vm.setSexoBiologico,
-                        screenWidth: w,
-                      ),
-                      SizedBox(height: sectionGap * 1.2),
-                      Text(
-                        'Orientación sexual',
-                        style: TextStyle(
-                          fontSize: labelSize,
-                          fontWeight: FontWeight.w600,
-                          color: Colors.black87,
-                        ),
-                      ),
-                      const SizedBox(height: 8),
-                      TextField(
-                        controller: _orientationController,
-                        decoration: InputDecoration(
-                          hintText: 'Escribe la orientación sexual',
-                          hintStyle: const TextStyle(
-                            color: Colors.black54,
-                            fontWeight: FontWeight.w500,
-                          ),
-                          filled: true,
-                          fillColor: Colors.grey.shade300,
-                          contentPadding: const EdgeInsets.symmetric(
-                            horizontal: 18, vertical: 16,
-                          ),
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(24),
-                            borderSide: BorderSide.none,
-                          ),
-                          enabledBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(24),
-                            borderSide: BorderSide.none,
-                          ),
-                          focusedBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(24),
-                            borderSide: BorderSide.none,
-                          ),
-                        ),
-                      ),
-                      SizedBox(height: sectionGap * 1.4),
-                      Center(
-                        child: SizedBox(
-                          width: (w * 0.42).clamp(160.0, 220.0),
-                          child: PrimaryActionButton(
-                            text: 'Siguiente paso',
-                            onTap: _goNext,
-                          ),
-                        ),
-                      ),
-                    ],
-                  );
-                },
+  Widget build(BuildContext context) => ReportStepLayout(
+    step: 1,
+    section: 'Perfil',
+    title: 'Cuéntanos sobre la persona afectada',
+    subtitle: 'Esta información nos ayuda a orientar mejor el caso.',
+    onNext: _goNext,
+    onHelp: _showHelp,
+    contentBuilder: (compact) => Consumer<ReportCaseViewModel>(
+      builder: (context, vm, _) => Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          const _FieldTitle(
+            number: '1',
+            text: '¿Quién es la persona afectada?',
+          ),
+          const SizedBox(height: 10),
+          _PersonSelector(
+            selected: vm.personType,
+            onChanged: vm.setPersonType,
+            compact: compact,
+          ),
+          const SizedBox(height: 18),
+          const _FieldTitle(number: '2', text: 'Sexo biológico'),
+          const SizedBox(height: 8),
+          DropdownButtonFormField<String>(
+            initialValue: vm.sexoBiologico,
+            isExpanded: true,
+            icon: const Icon(
+              Icons.keyboard_arrow_down_rounded,
+              color: OnboardingPalette.purple,
+            ),
+            dropdownColor: Colors.white,
+            style: const TextStyle(
+              fontFamily: 'Roboto',
+              color: Color(0xFF25204F),
+              fontSize: 14,
+              fontWeight: FontWeight.w600,
+            ),
+            decoration: _fieldDecoration(
+              hint: 'Seleccionar opción...',
+              icon: Icons.wc_rounded,
+            ),
+            hint: const Text(
+              'Seleccionar opción...',
+              style: TextStyle(
+                fontFamily: 'Roboto',
+                color: Color(0xFF77758A),
+                fontSize: 13,
               ),
             ),
-            const AppBottomBar(),
-            const SideChat(),
-          ],
+            items: const [
+              DropdownMenuItem(value: 'Masculino', child: Text('Masculino')),
+              DropdownMenuItem(value: 'Femenino', child: Text('Femenino')),
+              DropdownMenuItem(
+                value: 'Intersexual',
+                child: Text('Intersexual'),
+              ),
+            ],
+            onChanged: vm.setSexoBiologico,
+          ),
+          const SizedBox(height: 18),
+          const _FieldTitle(number: '3', text: 'Orientación sexual'),
+          const SizedBox(height: 8),
+          TextField(
+            controller: _orientationController,
+            textCapitalization: TextCapitalization.sentences,
+            onChanged: vm.setOrientacionGenero,
+            style: const TextStyle(color: Color(0xFF25204F), fontSize: 14),
+            decoration: _fieldDecoration(
+              hint: 'Escribe la orientación sexual',
+              icon: Icons.favorite_border_rounded,
+            ),
+          ),
+          const SizedBox(height: 14),
+          const _PrivacyNote(),
+        ],
+      ),
+    ),
+  );
+}
+
+class _FieldTitle extends StatelessWidget {
+  final String number;
+  final String text;
+
+  const _FieldTitle({required this.number, required this.text});
+
+  @override
+  Widget build(BuildContext context) => Row(
+    children: [
+      Container(
+        width: 27,
+        height: 27,
+        alignment: Alignment.center,
+        decoration: const BoxDecoration(
+          color: OnboardingPalette.palePurple,
+          shape: BoxShape.circle,
+        ),
+        child: Text(
+          number,
+          style: const TextStyle(
+            color: OnboardingPalette.purple,
+            fontSize: 12,
+            fontWeight: FontWeight.w800,
+          ),
         ),
       ),
-    );
-  }
+      const SizedBox(width: 9),
+      Expanded(
+        child: Text(
+          text,
+          style: const TextStyle(
+            color: Color(0xFF25204F),
+            fontSize: 14,
+            fontWeight: FontWeight.w700,
+          ),
+        ),
+      ),
+    ],
+  );
 }
 
 class _PersonSelector extends StatelessWidget {
   final AffectedPersonType selected;
   final ValueChanged<AffectedPersonType> onChanged;
-  final double screenWidth;
+  final bool compact;
 
   const _PersonSelector({
     required this.selected,
     required this.onChanged,
-    required this.screenWidth,
+    required this.compact,
   });
 
-  static const _options = <_PersonOption>[
-    _PersonOption(AffectedPersonType.ninioNinia, 'Niña/Niño',
-        Icons.child_care_outlined),
-    _PersonOption(AffectedPersonType.adolescente, 'Adolescente',
-        Icons.accessibility_new_outlined),
-    _PersonOption(AffectedPersonType.adulto, 'Adulto',
-        Icons.person_outline_rounded),
+  static const _options = [
+    (AffectedPersonType.ninioNinia, 'Niña/Niño', Icons.child_care_outlined),
+    (
+      AffectedPersonType.adolescente,
+      'Adolescente',
+      Icons.accessibility_new_outlined,
+    ),
+    (AffectedPersonType.adulto, 'Adulto', Icons.person_outline_rounded),
   ];
 
   @override
-  Widget build(BuildContext context) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: _options.map((opt) {
-        final isSelected = selected == opt.type;
-        return Expanded(
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 4),
-            child: GestureDetector(
-              onTap: () => onChanged(opt.type),
-              child: AnimatedContainer(
-                duration: const Duration(milliseconds: 180),
-                curve: Curves.easeInOut,
-                padding: const EdgeInsets.fromLTRB(8, 10, 8, 8),
-                decoration: BoxDecoration(
-                  color: isSelected
-                      ? Colors.grey.shade300
-                      : Colors.transparent,
-                  borderRadius: BorderRadius.circular(18),
-                  border: Border.all(
-                    color: isSelected
-                        ? Colors.grey.shade400
-                        : Colors.transparent,
-                  ),
-                ),
-                child: Column(
-                  children: [
-                    Icon(
-                      opt.icon,
-                      size: (screenWidth * 0.09).clamp(28.0, 34.0),
-                      color: Colors.black87,
-                    ),
-                    const SizedBox(height: 7),
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 10, vertical: 5,
-                      ),
-                      decoration: BoxDecoration(
-                        color: Colors.grey.shade300,
-                        borderRadius: BorderRadius.circular(20),
-                      ),
-                      child: Text(
-                        opt.label,
-                        textAlign: TextAlign.center,
-                        style: TextStyle(
-                          fontSize: (screenWidth * 0.031).clamp(11.0, 13.0),
-                          color: Colors.black87,
-                          fontWeight: isSelected
-                              ? FontWeight.w700
-                              : FontWeight.w500,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
+  Widget build(BuildContext context) => Row(
+    crossAxisAlignment: CrossAxisAlignment.start,
+    children: [
+      for (var index = 0; index < _options.length; index++) ...[
+        if (index > 0) const SizedBox(width: 8),
+        Expanded(
+          child: ReportChoiceCard(
+            title: _options[index].$2,
+            icon: _options[index].$3,
+            color: index == 1
+                ? OnboardingPalette.orange
+                : OnboardingPalette.purple,
+            selected: selected == _options[index].$1,
+            onTap: () => onChanged(_options[index].$1),
+            vertical: true,
+            compact: compact,
           ),
-        );
-      }).toList(),
-    );
-  }
+        ),
+      ],
+    ],
+  );
 }
 
-class _PersonOption {
-  final AffectedPersonType type;
-  final String label;
-  final IconData icon;
-  const _PersonOption(this.type, this.label, this.icon);
-}
+InputDecoration _fieldDecoration({
+  required String hint,
+  required IconData icon,
+}) => InputDecoration(
+  hintText: hint,
+  hintStyle: reportSecondaryStyle,
+  prefixIcon: Icon(icon, color: OnboardingPalette.purple, size: 21),
+  filled: true,
+  fillColor: Colors.white,
+  contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
+  border: OutlineInputBorder(
+    borderRadius: BorderRadius.circular(14),
+    borderSide: const BorderSide(color: Color(0xFFE0E2EA)),
+  ),
+  enabledBorder: OutlineInputBorder(
+    borderRadius: BorderRadius.circular(14),
+    borderSide: const BorderSide(color: Color(0xFFE0E2EA)),
+  ),
+  focusedBorder: OutlineInputBorder(
+    borderRadius: BorderRadius.circular(14),
+    borderSide: const BorderSide(color: OnboardingPalette.purple, width: 1.6),
+  ),
+);
 
-class _BiologicalSexDropdown extends StatelessWidget {
-  final String? value;
-  final ValueChanged<String?> onChanged;
-  final double screenWidth;
-
-  const _BiologicalSexDropdown({
-    required this.value,
-    required this.onChanged,
-    required this.screenWidth,
-  });
+class _PrivacyNote extends StatelessWidget {
+  const _PrivacyNote();
 
   @override
-  Widget build(BuildContext context) {
-    return DropdownButtonFormField<String>(
-      initialValue: value,
-      icon: const Icon(Icons.keyboard_arrow_down_rounded, size: 34),
-      dropdownColor: Colors.white,
-      style: TextStyle(
-        fontSize: (screenWidth * 0.038).clamp(13.0, 16.0),
-        color: Colors.black87,
-        fontWeight: FontWeight.w600,
-      ),
-      decoration: InputDecoration(
-        filled: true,
-        fillColor: Colors.grey.shade300,
-        contentPadding: const EdgeInsets.symmetric(
-          horizontal: 18, vertical: 14,
+  Widget build(BuildContext context) => Container(
+    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+    decoration: BoxDecoration(
+      color: OnboardingPalette.paleTeal,
+      borderRadius: BorderRadius.circular(14),
+    ),
+    child: const Row(
+      children: [
+        Icon(Icons.lock_outline_rounded, color: OnboardingPalette.teal),
+        SizedBox(width: 10),
+        Expanded(
+          child: Text(
+            'Tu información estará protegida durante todo el proceso.',
+            style: TextStyle(
+              color: Color(0xFF22616B),
+              fontSize: 12,
+              height: 1.4,
+            ),
+          ),
         ),
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(30),
-          borderSide: BorderSide.none,
-        ),
-        enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(30),
-          borderSide: BorderSide.none,
-        ),
-      ),
-      hint: const Text(
-        'Seleccionar opción...',
-        style: TextStyle(color: Colors.black87, fontWeight: FontWeight.w600),
-      ),
-      items: const [
-        DropdownMenuItem(value: 'Masculino', child: Text('Masculino')),
-        DropdownMenuItem(value: 'Femenino', child: Text('Femenino')),
-        DropdownMenuItem(value: 'Intersexual', child: Text('Intersexual')),
       ],
-      onChanged: onChanged,
-    );
-  }
+    ),
+  );
 }

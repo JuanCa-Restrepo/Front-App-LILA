@@ -9,6 +9,7 @@ import '../core/services/google_drive_uploader.dart';
 import '../data/datasources/caso_remote_datasource.dart';
 import '../data/datasources/evidencia_remote_datasource.dart';
 import '../data/datasources/responsable_remote_datasource.dart';
+import '../data/datasources/tipo_acoso_local_datasource.dart';
 import '../data/datasources/tipo_acoso_remote_datasource.dart';
 import '../data/datasources/usuario_remote_datasource.dart';
 import '../data/repositories/caso_repository_impl.dart';
@@ -66,6 +67,9 @@ class App extends StatelessWidget {
         Provider<TipoAcosoRemoteDatasource>(
           create: (ctx) => TipoAcosoRemoteDatasource(ctx.read<ApiClient>()),
         ),
+        Provider<TipoAcosoLocalDatasource>(
+          create: (_) => const TipoAcosoLocalDatasource(),
+        ),
         Provider<ResponsableRemoteDatasource>(
           create: (ctx) =>
               ResponsableRemoteDatasource(ctx.read<ApiClient>()),
@@ -88,6 +92,7 @@ class App extends StatelessWidget {
         Provider<TipoAcosoRepository>(
           create: (ctx) => TipoAcosoRepositoryImpl(
             ctx.read<TipoAcosoRemoteDatasource>(),
+            ctx.read<TipoAcosoLocalDatasource>(),
           ),
         ),
         Provider<ResponsableRepository>(

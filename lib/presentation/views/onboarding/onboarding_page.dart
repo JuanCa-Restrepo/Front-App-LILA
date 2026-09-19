@@ -15,7 +15,6 @@ class OnboardingPage extends StatefulWidget {
 
 class _OnboardingPageState extends State<OnboardingPage> {
   final PageController _pageController = PageController();
-  int _currentPage = 0;
 
   @override
   void dispose() {
@@ -24,12 +23,10 @@ class _OnboardingPageState extends State<OnboardingPage> {
   }
 
   void _nextPage() {
-    if (_currentPage < 1) {
-      _pageController.nextPage(
-        duration: const Duration(milliseconds: 300),
-        curve: Curves.easeInOut,
-      );
-    }
+    _pageController.nextPage(
+      duration: const Duration(milliseconds: 300),
+      curve: Curves.easeInOut,
+    );
   }
 
   void _goToHome() {
@@ -44,12 +41,14 @@ class _OnboardingPageState extends State<OnboardingPage> {
           const begin = Offset(1.0, 0.0);
           const end = Offset.zero;
 
-          final slideTween = Tween(begin: begin, end: end).chain(
-            CurveTween(curve: Curves.easeInOutCubic),
-          );
-          final fadeTween = Tween<double>(begin: 0.0, end: 1.0).chain(
-            CurveTween(curve: Curves.easeInOut),
-          );
+          final slideTween = Tween(
+            begin: begin,
+            end: end,
+          ).chain(CurveTween(curve: Curves.easeInOutCubic));
+          final fadeTween = Tween<double>(
+            begin: 0.0,
+            end: 1.0,
+          ).chain(CurveTween(curve: Curves.easeInOut));
 
           return SlideTransition(
             position: animation.drive(slideTween),
@@ -66,42 +65,12 @@ class _OnboardingPageState extends State<OnboardingPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Stack(
+      body: PageView(
+        controller: _pageController,
         children: [
-          PageView(
-            controller: _pageController,
-            onPageChanged: (index) =>
-                setState(() => _currentPage = index),
-            children: [
-              WelcomePage(onNext: _nextPage),
-              StepsPage(onStart: _goToHome),
-            ],
-          ),
-          Positioned(
-            bottom: 25,
-            left: 0,
-            right: 0,
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                _buildDot(isActive: _currentPage == 0),
-                const SizedBox(width: 6),
-                _buildDot(isActive: _currentPage == 1),
-              ],
-            ),
-          ),
+          WelcomePage(onNext: _nextPage),
+          StepsPage(onStart: _goToHome),
         ],
-      ),
-    );
-  }
-
-  Widget _buildDot({required bool isActive}) {
-    return Container(
-      width: 8,
-      height: 8,
-      decoration: BoxDecoration(
-        color: isActive ? Colors.deepPurple : Colors.grey.shade400,
-        shape: BoxShape.circle,
       ),
     );
   }

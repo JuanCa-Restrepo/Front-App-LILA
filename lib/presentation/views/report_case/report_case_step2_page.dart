@@ -4,17 +4,13 @@ import 'package:provider/provider.dart';
 import '../../../data/models/tipo_acoso_model.dart';
 import '../../viewmodels/report_case_viewmodel.dart';
 import '../../viewmodels/tipo_acoso_viewmodel.dart';
-import '../../widgets/app_bottom_bar.dart';
-import '../../widgets/primary_action_button.dart';
-import '../../widgets/progress_header.dart';
-import '../../widgets/side_chat.dart';
+import '../onboarding/onboarding_style.dart';
 import 'report_case_step3_page.dart';
+import 'report_step_layout.dart';
 
-/// Paso 2 — Selección del tipo de acoso desde el catálogo del backend
-/// (`GET /tipos-acoso`).
+/// Keeps the backend catalog and IDs as the source of selectable situations.
 class ReportCaseStep2Page extends StatefulWidget {
   const ReportCaseStep2Page({super.key});
-
   @override
   State<ReportCaseStep2Page> createState() => _ReportCaseStep2PageState();
 }
@@ -23,15 +19,16 @@ class _ReportCaseStep2PageState extends State<ReportCaseStep2Page> {
   @override
   void initState() {
     super.initState();
-    // Cargamos el catálogo si aún no está en memoria.
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      context.read<TipoAcosoViewModel>().load();
+      if (mounted) context.read<TipoAcosoViewModel>().load();
     });
   }
 
   void _goNext() {
-    final reportVm = context.read<ReportCaseViewModel>();
-    if (reportVm.idTipoAcoso == null) {
+    final id = context.read<ReportCaseViewModel>().idTipoAcoso;
+    if (!context.read<TipoAcosoViewModel>().items.any(
+      (item) => item.idTipoAcoso == id,
+    )) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Selecciona el tipo de acoso.')),
       );
@@ -43,86 +40,152 @@ class _ReportCaseStep2PageState extends State<ReportCaseStep2Page> {
     );
   }
 
+  void _showGuide() => showReportHelp(
+    context,
+    title: 'Guía de orientación',
+    child: Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Text(
+          'Estas descripciones pueden ayudarte a elegir la situación que mejor se acerca a lo ocurrido.',
+          style: reportSecondaryStyle,
+        ),
+        for (final name in [
+          'Acoso verbal',
+          'Acoso físico',
+          'Acoso sexual',
+          'Acoso digital',
+        ]) ...[
+          const SizedBox(height: 16),
+          Text(
+            name,
+            style: const TextStyle(
+              color: OnboardingPalette.purple,
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+          const SizedBox(height: 4),
+          Text(_situationStyle(name).$3, style: reportSecondaryStyle),
+        ],
+        const SizedBox(height: 16),
+        const Text(
+          'Si ocurrieron varias situaciones, selecciona la más cercana y cuéntanos los demás detalles en la descripción.',
+          style: reportSecondaryStyle,
+        ),
+      ],
+    ),
+  );
   @override
-  Widget build(BuildContext context) {
-    final size = MediaQuery.of(context).size;
-    final w = size.width;
-    final h = size.height;
-
-    final horizontalPadding = (w * 0.08).clamp(20.0, 34.0);
-    final sectionGap = (h * 0.026).clamp(14.0, 24.0);
-    final titleSize = (w * 0.043).clamp(15.0, 18.0);
-
-    return Scaffold(
-      backgroundColor: const Color(0xFFF5F5F5),
-      body: SafeArea(
-        child: Stack(
-          children: [
-            SingleChildScrollView(
-              padding: EdgeInsets.fromLTRB(
-                horizontalPadding, 14, horizontalPadding, 150,
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+  Widget build(BuildContext context) => ReportStepLayout(
+    step: 2,
+    section: 'Situación',
+    title: '¿Qué está pasando?',
+    subtitle: 'Selecciona la opción que mejor describa la situación.',
+    onNext: _goNext,
+    onHelp: _showGuide,
+    contentBuilder: (compact) => Column(
+      children: [
+        Consumer2<TipoAcosoViewModel, ReportCaseViewModel>(
+          builder: (context, catalog, report, _) {
+            if (catalog.isLoading && !catalog.isLoaded) {
+              return const Padding(
+                padding: EdgeInsets.all(32),
+                child: Center(
+                  child: CircularProgressIndicator(
+                    color: OnboardingPalette.purple,
+                  ),
+                ),
+              );
+            }
+            if (!catalog.isLoaded) {
+              return Container(
+                padding: const EdgeInsets.all(20),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(16),
+                ),
+                child: Column(
+                  children: [
+                    const Icon(
+                      Icons.info_outline_rounded,
+                      color: OnboardingPalette.purple,
+                    ),
+                    const SizedBox(height: 10),
+                    Text(
+                      catalog.errorMessage ??
+                          'No hay tipos de situación disponibles en este momento.',
+                      textAlign: TextAlign.center,
+                      style: reportSecondaryStyle,
+                    ),
+                    TextButton(
+                      onPressed: () => catalog.load(force: true),
+                      child: const Text('Reintentar'),
+                    ),
+                  ],
+                ),
+              );
+            }
+            return Column(
+              children: [
+                for (var i = 0; i < catalog.items.length; i++) ...[
+                  if (i > 0) const SizedBox(height: 8),
+                  ReportChoiceCard(
+                    title: catalog.items[i].descripcion,
+                    description: _situationStyle(
+                      catalog.items[i].descripcion,
+                    ).$3,
+                    icon: _situationStyle(catalog.items[i].descripcion).$1,
+                    color: _situationStyle(catalog.items[i].descripcion).$2,
+                    selected:
+                        report.idTipoAcoso == catalog.items[i].idTipoAcoso,
+                    onTap: () =>
+                        report.setIdTipoAcoso(catalog.items[i].idTipoAcoso),
+                    compact: compact,
+                  ),
+                ],
+              ],
+            );
+          },
+        ),
+        const SizedBox(height: 10),
+        Material(
+          color: OnboardingPalette.paleTeal,
+          borderRadius: BorderRadius.circular(14),
+          clipBehavior: Clip.antiAlias,
+          child: InkWell(
+            onTap: _showGuide,
+            child: const Padding(
+              padding: EdgeInsets.all(12),
+              child: Row(
                 children: [
-                  const ProgressHeader(progress: 0.56),
-                  const SizedBox(height: 14),
-                  Text(
-                    'Paso 2: Tipo de situación',
-                    style: TextStyle(
-                      fontSize: titleSize,
-                      fontWeight: FontWeight.w600,
-                      color: Colors.black87,
-                    ),
+                  Icon(
+                    Icons.menu_book_rounded,
+                    color: OnboardingPalette.teal,
+                    size: 28,
                   ),
-                  SizedBox(height: sectionGap * 1.2),
-                  Consumer2<TipoAcosoViewModel, ReportCaseViewModel>(
-                    builder: (_, catalog, report, __) {
-                      if (catalog.isLoading && !catalog.isLoaded) {
-                        return const Padding(
-                          padding: EdgeInsets.symmetric(vertical: 32),
-                          child: Center(
-                            child: CircularProgressIndicator(
-                              color: Colors.black87,
-                            ),
+                  SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          '¿No sabes cuál elegir?',
+                          style: TextStyle(
+                            color: Color(0xFF22616B),
+                            fontSize: 12,
+                            fontWeight: FontWeight.w700,
                           ),
-                        );
-                      }
-                      if (catalog.errorMessage != null && !catalog.isLoaded) {
-                        return _ErrorRetry(
-                          message: catalog.errorMessage!,
-                          onRetry: () => catalog.load(force: true),
-                        );
-                      }
-                      return _SituationDropdown(
-                        items: catalog.items,
-                        selectedId: report.idTipoAcoso,
-                        onChanged: report.setIdTipoAcoso,
-                        screenWidth: w,
-                      );
-                    },
-                  ),
-                  const SizedBox(height: 14),
-                  GestureDetector(
-                    onTap: () {},
-                    child: Text(
-                      '¿No estás seguro? Conoce tus derechos y los tipos de delitos aquí',
-                      style: TextStyle(
-                        fontSize: (w * 0.034).clamp(12.0, 14.0),
-                        color: Colors.blue.shade700,
-                        fontWeight: FontWeight.w600,
-                        height: 1.3,
-                      ),
-                    ),
-                  ),
-                  SizedBox(height: (h * 0.42).clamp(210.0, 290.0)),
-                  Center(
-                    child: SizedBox(
-                      width: (w * 0.42).clamp(160.0, 220.0),
-                      child: PrimaryActionButton(
-                        text: 'Siguiente paso',
-                        onTap: _goNext,
-                      ),
+                        ),
+                        SizedBox(height: 3),
+                        Text(
+                          'Ver guía de orientación',
+                          style: TextStyle(
+                            color: OnboardingPalette.teal,
+                            fontSize: 12,
+                            decoration: TextDecoration.underline,
+                          ),
+                        ),
+                      ],
                     ),
                   ),
                 ],

@@ -1,175 +1,273 @@
 import 'package:flutter/material.dart';
 
+import 'onboarding_style.dart';
+
 /// Segunda pantalla del onboarding: explica los 4 pasos del proceso.
 class StepsPage extends StatelessWidget {
   final VoidCallback onStart;
 
-  const StepsPage({
-    super.key,
-    required this.onStart,
-  });
+  const StepsPage({super.key, required this.onStart});
 
   @override
   Widget build(BuildContext context) {
-    final size = MediaQuery.of(context).size;
-    final w = size.width;
-    final h = size.height;
-
-    final horizontalPad = (w * 0.10).clamp(22.0, 40.0);
-    final titleSize = (w * 0.085).clamp(24.0, 32.0);
-    final subtitleSize = (w * 0.043).clamp(14.0, 17.0);
-    final bodySize = (w * 0.038).clamp(12.0, 15.0);
-    final circleSize = (w * 0.18).clamp(60.0, 76.0);
-    final iconSize = (circleSize * 0.48).clamp(26.0, 36.0);
-
     return Scaffold(
-      backgroundColor: const Color(0xFFF5F5F5),
-      body: SafeArea(
-        child: LayoutBuilder(
-          builder: (context, constraints) {
-            return SingleChildScrollView(
-              child: ConstrainedBox(
-                constraints: BoxConstraints(minHeight: constraints.maxHeight),
-                child: Padding(
-                  padding: EdgeInsets.symmetric(horizontal: horizontalPad),
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      SizedBox(height: h * 0.06),
-                      Text(
-                        '¿Cómo reportar\nun caso?',
-                        textAlign: TextAlign.center,
-                        style: TextStyle(
-                          fontSize: titleSize,
-                          fontWeight: FontWeight.w700,
-                          height: 1.1,
-                          color: Colors.black87,
+      backgroundColor: OnboardingPalette.background,
+      body: Stack(
+        children: [
+          const Positioned.fill(child: OnboardingBackground()),
+          SafeArea(
+            child: LayoutBuilder(
+              builder: (context, constraints) {
+                return Column(
+                  children: [
+                    Expanded(
+                      child: SingleChildScrollView(
+                        padding: const EdgeInsets.fromLTRB(24, 20, 24, 16),
+                        child: Column(
+                          children: [
+                            const LilaWordmark(),
+                            const SizedBox(height: 24),
+                            const Text(
+                              '¿Cómo reportar\nun caso?',
+                              textAlign: TextAlign.center,
+                              style: TextStyle(
+                                fontSize: 32,
+                                height: 1.05,
+                                fontWeight: FontWeight.w800,
+                                color: OnboardingPalette.ink,
+                              ),
+                            ),
+                            const SizedBox(height: 14),
+                            const Text(
+                              'El proceso consta de 4\npasos rápidos:',
+                              textAlign: TextAlign.center,
+                              style: TextStyle(
+                                fontSize: 17,
+                                height: 1.3,
+                                color: OnboardingPalette.ink,
+                              ),
+                            ),
+                            const SizedBox(height: 24),
+                            const _StepsGrid(),
+                            const SizedBox(height: 22),
+                            const Text(
+                              'Te guiaremos en cada uno para\nasegurar que la información sea precisa.',
+                              textAlign: TextAlign.center,
+                              style: TextStyle(
+                                fontSize: 15,
+                                height: 1.4,
+                                color: OnboardingPalette.ink,
+                              ),
+                            ),
+                          ],
                         ),
                       ),
-                      SizedBox(height: h * 0.035),
-                      Text(
-                        'El proceso consta de 4\npasos rápidos:',
-                        textAlign: TextAlign.center,
-                        style: TextStyle(
-                          fontSize: subtitleSize,
-                          height: 1.3,
-                          color: Colors.black87,
-                        ),
-                      ),
-                      SizedBox(height: h * 0.05),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(24, 10, 24, 20),
+                      child: Column(
                         children: [
-                          _StepItem(
-                            icon: Icons.person_add_alt_1,
-                            label: 'Perfil',
-                            circleSize: circleSize,
-                            iconSize: iconSize,
+                          OnboardingPrimaryButton(
+                            text: 'Comenzar',
+                            onPressed: onStart,
                           ),
-                          _StepItem(
-                            icon: Icons.edit_note,
-                            label: 'Detalles',
-                            circleSize: circleSize,
-                            iconSize: iconSize,
-                          ),
+                          const SizedBox(height: 18),
+                          const OnboardingPageDots(activeIndex: 1),
                         ],
                       ),
-                      SizedBox(height: h * 0.035),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                        children: [
-                          _StepItem(
-                            icon: Icons.note_add,
-                            label: 'Evidencias',
-                            circleSize: circleSize,
-                            iconSize: iconSize,
-                          ),
-                          _StepItem(
-                            icon: Icons.check_circle_outline,
-                            label: 'Confirmación',
-                            circleSize: circleSize,
-                            iconSize: iconSize,
-                          ),
-                        ],
-                      ),
-                      SizedBox(height: h * 0.045),
-                      Text(
-                        'Te guiaremos en cada uno para\nasegurar que la información sea precisa.',
-                        textAlign: TextAlign.center,
-                        style: TextStyle(
-                          fontSize: bodySize,
-                          height: 1.35,
-                          color: Colors.black87,
-                        ),
-                      ),
-                      SizedBox(height: h * 0.04),
-                      SizedBox(
-                        width: (w * 0.42).clamp(150.0, 190.0),
-                        height: (h * 0.06).clamp(42.0, 50.0),
-                        child: ElevatedButton(
-                          onPressed: onStart,
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.black87,
-                            foregroundColor: Colors.white,
-                            elevation: 0,
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                          ),
-                          child: Text(
-                            'Comenzar',
-                            style: TextStyle(
-                              fontSize: (w * 0.04).clamp(14.0, 16.0),
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
-                        ),
-                      ),
-                      SizedBox(height: h * 0.09),
-                    ],
-                  ),
-                ),
-              ),
-            );
-          },
-        ),
+                    ),
+                  ],
+                );
+              },
+            ),
+          ),
+        ],
       ),
     );
   }
 }
 
-class _StepItem extends StatelessWidget {
-  final IconData icon;
-  final String label;
-  final double circleSize;
-  final double iconSize;
-
-  const _StepItem({
-    required this.icon,
-    required this.label,
-    required this.circleSize,
-    required this.iconSize,
-  });
+class _StepsGrid extends StatelessWidget {
+  const _StepsGrid();
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      children: [
-        Container(
-          width: circleSize,
-          height: circleSize,
-          decoration: BoxDecoration(
-            color: Colors.grey.shade300,
-            shape: BoxShape.circle,
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final itemWidth = (constraints.maxWidth - 14) / 2;
+        const items = [
+          _StepData(
+            number: 1,
+            label: 'Perfil',
+            icon: Icons.person_outline_rounded,
+            color: OnboardingPalette.purple,
+            surface: OnboardingPalette.palePurple,
           ),
-          child: Icon(icon, size: iconSize, color: Colors.black87),
-        ),
-        const SizedBox(height: 8),
-        Text(
-          label,
-          style: const TextStyle(fontSize: 13, color: Colors.black87),
-        ),
-      ],
+          _StepData(
+            number: 2,
+            label: 'Detalles',
+            icon: Icons.edit_note_rounded,
+            color: OnboardingPalette.teal,
+            surface: OnboardingPalette.paleTeal,
+          ),
+          _StepData(
+            number: 3,
+            label: 'Evidencias',
+            icon: Icons.image_outlined,
+            color: OnboardingPalette.orange,
+            surface: OnboardingPalette.paleOrange,
+          ),
+          _StepData(
+            number: 4,
+            label: 'Confirmación',
+            icon: Icons.check_circle_outline_rounded,
+            color: OnboardingPalette.purple,
+            surface: OnboardingPalette.palePurple,
+          ),
+        ];
+
+        return Stack(
+          children: [
+            const Positioned.fill(
+              child: CustomPaint(painter: _StepsRoutePainter()),
+            ),
+            Wrap(
+              spacing: 14,
+              runSpacing: 14,
+              children: items
+                  .map(
+                    (item) => SizedBox(
+                      width: itemWidth,
+                      height: itemWidth.clamp(152.0, 170.0),
+                      child: _StepCard(data: item),
+                    ),
+                  )
+                  .toList(),
+            ),
+          ],
+        );
+      },
     );
   }
+}
+
+class _StepCard extends StatelessWidget {
+  final _StepData data;
+
+  const _StepCard({required this.data});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.fromLTRB(12, 12, 12, 14),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(24),
+        boxShadow: [
+          BoxShadow(
+            color: OnboardingPalette.purple.withValues(alpha: 0.08),
+            blurRadius: 18,
+            offset: const Offset(0, 7),
+          ),
+        ],
+      ),
+      child: Column(
+        children: [
+          Align(
+            alignment: Alignment.centerLeft,
+            child: Container(
+              width: 34,
+              height: 34,
+              alignment: Alignment.center,
+              decoration: BoxDecoration(
+                color: data.color,
+                shape: BoxShape.circle,
+              ),
+              child: Text(
+                '${data.number}',
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 16,
+                  fontWeight: FontWeight.w800,
+                ),
+              ),
+            ),
+          ),
+          Expanded(
+            child: Center(
+              child: Container(
+                width: 72,
+                height: 72,
+                decoration: BoxDecoration(
+                  color: data.surface,
+                  shape: BoxShape.circle,
+                ),
+                child: Icon(data.icon, size: 40, color: data.color),
+              ),
+            ),
+          ),
+          Text(
+            data.label,
+            textAlign: TextAlign.center,
+            style: const TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.w700,
+              color: OnboardingPalette.ink,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _StepsRoutePainter extends CustomPainter {
+  const _StepsRoutePainter();
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()
+      ..color = OnboardingPalette.teal.withValues(alpha: 0.22)
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 10
+      ..strokeCap = StrokeCap.round;
+    final path = Path()
+      ..moveTo(size.width * 0.18, size.height * 0.23)
+      ..cubicTo(
+        size.width * 0.52,
+        size.height * 0.06,
+        size.width * 0.88,
+        size.height * 0.20,
+        size.width * 0.82,
+        size.height * 0.50,
+      )
+      ..cubicTo(
+        size.width * 0.78,
+        size.height * 0.80,
+        size.width * 0.45,
+        size.height * 0.95,
+        size.width * 0.18,
+        size.height * 0.76,
+      );
+    canvas.drawPath(path, paint);
+  }
+
+  @override
+  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
+}
+
+class _StepData {
+  final int number;
+  final String label;
+  final IconData icon;
+  final Color color;
+  final Color surface;
+
+  const _StepData({
+    required this.number,
+    required this.label,
+    required this.icon,
+    required this.color,
+    required this.surface,
+  });
 }

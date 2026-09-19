@@ -6,13 +6,10 @@ import '../../viewmodels/report_case_viewmodel.dart';
 import '../../widgets/app_bottom_bar.dart';
 import '../../widgets/side_chat.dart';
 import '../case_status/state_report_page.dart';
+import '../onboarding/onboarding_style.dart';
 import '../report_case/report_case_step1_page.dart';
 
-/// Pantalla principal: botón de pánico, accesos a reporte y consulta de
-/// estado por código.
-///
-/// Toda la lógica de "buscar caso por código" pasó al `CaseStatusViewModel`.
-/// La View solo dispara `lookUpByCode` y reacciona al resultado.
+/// Pantalla principal: acceso a emergencia, reporte y consulta de estado.
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
 
@@ -22,23 +19,18 @@ class HomePage extends StatefulWidget {
 
 class _HomePageState extends State<HomePage> {
   final TextEditingController _trackingCodeController = TextEditingController();
-
-  double _panicProgress = 0.0;
+  double _panicProgress = 0;
   bool _showEmergencyOverlay = false;
 
-  void _triggerEmergency() {
-    setState(() {
-      _showEmergencyOverlay = true;
-      _panicProgress = 1.0;
-    });
-  }
+  void _triggerEmergency() => setState(() {
+    _showEmergencyOverlay = true;
+    _panicProgress = 1;
+  });
 
-  void _closeEmergency() {
-    setState(() {
-      _showEmergencyOverlay = false;
-      _panicProgress = 0.0;
-    });
-  }
+  void _closeEmergency() => setState(() {
+    _showEmergencyOverlay = false;
+    _panicProgress = 0;
+  });
 
   Future<void> _onCheckStatus() async {
     final code = _trackingCodeController.text.trim();
@@ -46,34 +38,26 @@ class _HomePageState extends State<HomePage> {
       _showSnack('Ingresa un código para consultar.');
       return;
     }
-
     final vm = context.read<CaseStatusViewModel>();
     final found = await vm.lookUpByCode(code);
     if (!mounted) return;
-
     if (found) {
       Navigator.push(
         context,
         MaterialPageRoute(builder: (_) => const StateReportPage()),
       );
-      return;
-    }
-
-    if (vm.codeNotFound) {
+    } else if (vm.codeNotFound) {
       _showSnack('Código no registrado.');
     } else if (vm.errorMessage != null) {
       _showSnack(vm.errorMessage!);
     }
   }
 
-  void _showSnack(String message) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(message)),
-    );
-  }
+  void _showSnack(String message) => ScaffoldMessenger.of(
+    context,
+  ).showSnackBar(SnackBar(content: Text(message)));
 
   void _openReportFlow() {
-    // Limpiamos el flujo previo antes de iniciar uno nuevo.
     context.read<ReportCaseViewModel>().reset();
     Navigator.push(
       context,
@@ -89,237 +73,513 @@ class _HomePageState extends State<HomePage> {
 
   @override
   Widget build(BuildContext context) {
-    final size = MediaQuery.of(context).size;
-    final w = size.width;
-    final h = size.height;
-
-    final horizontalPadding = (w * 0.08).clamp(20.0, 34.0);
-    final sectionGap = (h * 0.022).clamp(12.0, 22.0);
-    final titleSize = (w * 0.048).clamp(16.0, 22.0);
-    final bodySize = (w * 0.038).clamp(13.0, 16.0);
-
     return Scaffold(
-      backgroundColor: const Color(0xFFF5F5F5),
+      backgroundColor: OnboardingPalette.background,
+      bottomNavigationBar: const AppBottomBar.embedded(),
       body: SafeArea(
         child: Stack(
           children: [
-            SingleChildScrollView(
-              padding: EdgeInsets.fromLTRB(
-                horizontalPadding,
-                16,
-                horizontalPadding,
-                120,
-              ),
-              child: Column(
-                children: [
-                  Align(
-                    alignment: Alignment.centerRight,
-                    child: PopupMenuButton<String>(
-                      color: Colors.white,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(16),
-                      ),
-                      onSelected: (value) => _showSnack('Seleccionaste: $value'),
-                      itemBuilder: (context) => const [
-                        PopupMenuItem(value: 'Guía', child: Text('Guía')),
-                        PopupMenuItem(value: 'Opciones', child: Text('Opciones')),
-                        PopupMenuItem(value: 'Información', child: Text('Información')),
-                        PopupMenuItem(value: 'Ayuda', child: Text('Ayuda')),
-                        PopupMenuItem(value: 'PQRS', child: Text('PQRS')),
-                      ],
-                      child: Container(
-                        width: 46,
-                        height: 46,
-                        decoration: BoxDecoration(
-                          color: Colors.grey.shade200,
-                          shape: BoxShape.circle,
+            const Positioned.fill(child: _HomeBackground()),
+            LayoutBuilder(
+              builder: (context, constraints) {
+                final useWideLayout =
+                    constraints.maxWidth >= 700 ||
+                    constraints.maxWidth > constraints.maxHeight;
+                if (useWideLayout) {
+                  return _WideHomeLayout(
+                    trackingCodeController: _trackingCodeController,
+                    panicProgress: _panicProgress,
+                    onPanicChanged: (value) =>
+                        setState(() => _panicProgress = value),
+                    onPanicComplete: _triggerEmergency,
+                    onMenuSelected: _showSnack,
+                    onOpenReport: _openReportFlow,
+                    onCheckStatus: _onCheckStatus,
+                  );
+                }
+
+                return _ResponsiveBody(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      _HomeHeader(onMenuSelected: _showSnack),
+                      const SizedBox(height: 12),
+                      const Text(
+                        'Hola, estás en un\nespacio seguro',
+                        style: TextStyle(
+                          color: OnboardingPalette.ink,
+                          fontSize: 27,
+                          height: 1.08,
+                          fontWeight: FontWeight.w800,
                         ),
-                        child: const Icon(Icons.menu, size: 22),
                       ),
-                    ),
-                  ),
-                  SizedBox(height: sectionGap),
-                  _buildPanicCard(),
-                  SizedBox(height: sectionGap * 0.8),
-                  Text(
-                    'Desliza para activar el Botón de Pánico',
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                      fontSize: bodySize,
-                      fontWeight: FontWeight.w600,
-                      color: Colors.black87,
-                    ),
-                  ),
-                  SizedBox(height: sectionGap * 1.5),
-                  Text(
-                    'Soy víctima',
-                    style: TextStyle(fontSize: titleSize, color: Colors.black87),
-                  ),
-                  const SizedBox(height: 10),
-                  _MainButton(
-                    text: 'Reportar un caso',
-                    filled: true,
-                    width: (w * 0.52).clamp(180.0, 250.0),
-                    onTap: _openReportFlow,
-                  ),
-                  SizedBox(height: sectionGap * 1.1),
-                  Text(
-                    'Soy testigo',
-                    style: TextStyle(fontSize: titleSize, color: Colors.black87),
-                  ),
-                  const SizedBox(height: 10),
-                  _MainButton(
-                    text: 'Reportar una\nsituación',
-                    filled: false,
-                    width: (w * 0.58).clamp(200.0, 290.0),
-                    onTap: () {},
-                  ),
-                  SizedBox(height: sectionGap * 1.4),
-                  Text(
-                    '¿Ya tienes un caso reportado?',
-                    style: TextStyle(fontSize: bodySize, color: Colors.black87),
-                  ),
-                  const SizedBox(height: 12),
-                  Container(
-                    width: double.infinity,
-                    height: (h * 0.072).clamp(50.0, 60.0),
-                    padding: const EdgeInsets.symmetric(horizontal: 14),
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      border: Border.all(color: Colors.grey.shade300),
-                      borderRadius: BorderRadius.circular(30),
-                    ),
-                    child: Row(
-                      children: [
-                        Expanded(
-                          child: TextField(
-                            controller: _trackingCodeController,
-                            textInputAction: TextInputAction.done,
-                            onSubmitted: (_) => _onCheckStatus(),
-                            decoration: InputDecoration(
-                              hintText: 'Ingresa tu código o radicado anónimo',
-                              hintStyle: TextStyle(
-                                fontSize: (w * 0.04).clamp(13.0, 16.0),
-                                color: Colors.black54,
-                              ),
-                              border: InputBorder.none,
-                              isCollapsed: true,
+                      const SizedBox(height: 8),
+                      Text(
+                        'Elige cómo podemos acompañarte hoy.',
+                        style: TextStyle(
+                          color: OnboardingPalette.ink.withValues(alpha: 0.72),
+                          fontSize: 15,
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+                      _EmergencyCard(
+                        progress: _panicProgress,
+                        onChanged: (value) =>
+                            setState(() => _panicProgress = value),
+                        onComplete: _triggerEmergency,
+                      ),
+                      const SizedBox(height: 16),
+                      const _SectionTitle(
+                        eyebrow: 'REPORTAR',
+                        title: '¿Qué deseas hacer?',
+                      ),
+                      const SizedBox(height: 9),
+                      Row(
+                        children: [
+                          Expanded(
+                            child: _CompactReportCard(
+                              icon: Icons.shield_outlined,
+                              color: OnboardingPalette.purple,
+                              surface: OnboardingPalette.palePurple,
+                              title: 'Soy víctima',
+                              description: 'Reportar un caso',
+                              onTap: _openReportFlow,
                             ),
                           ),
-                        ),
-                        const Icon(Icons.search, size: 28),
-                      ],
-                    ),
+                          const SizedBox(width: 10),
+                          Expanded(
+                            child: _CompactReportCard(
+                              icon: Icons.visibility_outlined,
+                              color: OnboardingPalette.teal,
+                              surface: OnboardingPalette.paleTeal,
+                              title: 'Soy testigo',
+                              description: 'Reportar una situación',
+                              onTap: () {},
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 16),
+                      const _SectionTitle(
+                        eyebrow: 'SEGUIMIENTO',
+                        title: '¿Ya tienes un caso reportado?',
+                      ),
+                      const SizedBox(height: 9),
+                      _TrackingCard(
+                        controller: _trackingCodeController,
+                        onSubmitted: _onCheckStatus,
+                      ),
+                    ],
                   ),
-                  const SizedBox(height: 18),
-                  Consumer<CaseStatusViewModel>(
-                    builder: (_, vm, __) => _MainButton(
-                      text: 'Consultar\nestado',
-                      filled: false,
-                      lightFilled: true,
-                      width: (w * 0.44).clamp(160.0, 220.0),
-                      onTap: vm.isLoading ? null : _onCheckStatus,
-                      isLoading: vm.isLoading,
-                    ),
-                  ),
-                ],
-              ),
+                );
+              },
             ),
-            const AppBottomBar(),
-            const SideChat(top: 300),
-            if (_showEmergencyOverlay) _buildEmergencyOverlay(),
+            const SideChat(bottom: 18),
+            if (_showEmergencyOverlay)
+              _EmergencyOverlay(onClose: _closeEmergency),
           ],
         ),
       ),
     );
   }
+}
 
-  Widget _buildPanicCard() {
+class _WideHomeLayout extends StatelessWidget {
+  final TextEditingController trackingCodeController;
+  final double panicProgress;
+  final ValueChanged<double> onPanicChanged;
+  final VoidCallback onPanicComplete;
+  final ValueChanged<String> onMenuSelected;
+  final VoidCallback onOpenReport;
+  final VoidCallback onCheckStatus;
+
+  const _WideHomeLayout({
+    required this.trackingCodeController,
+    required this.panicProgress,
+    required this.onPanicChanged,
+    required this.onPanicComplete,
+    required this.onMenuSelected,
+    required this.onOpenReport,
+    required this.onCheckStatus,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final keyboardIsOpen = MediaQuery.viewInsetsOf(context).bottom > 0;
+    final content = Padding(
+      padding: const EdgeInsets.fromLTRB(28, 18, 28, 18),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Expanded(
+            flex: 9,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                _HomeHeader(onMenuSelected: onMenuSelected),
+                const SizedBox(height: 18),
+                const Text(
+                  'Hola, estás en un\nespacio seguro',
+                  style: TextStyle(
+                    color: OnboardingPalette.ink,
+                    fontSize: 28,
+                    height: 1.06,
+                    fontWeight: FontWeight.w800,
+                  ),
+                ),
+                const SizedBox(height: 6),
+                Text(
+                  'Elige cómo podemos acompañarte hoy.',
+                  style: TextStyle(
+                    color: OnboardingPalette.ink.withValues(alpha: 0.72),
+                    fontSize: 14,
+                  ),
+                ),
+                const SizedBox(height: 18),
+                _EmergencyCard(
+                  progress: panicProgress,
+                  onChanged: onPanicChanged,
+                  onComplete: onPanicComplete,
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(width: 24),
+          Expanded(
+            flex: 11,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const _SectionTitle(
+                  eyebrow: 'REPORTAR',
+                  title: '¿Qué deseas hacer?',
+                ),
+                const SizedBox(height: 10),
+                _ReportActionCard(
+                  icon: Icons.shield_outlined,
+                  color: OnboardingPalette.purple,
+                  surface: OnboardingPalette.palePurple,
+                  title: 'Soy víctima',
+                  description: 'Reportar un caso de forma segura',
+                  onTap: onOpenReport,
+                ),
+                const SizedBox(height: 9),
+                _ReportActionCard(
+                  icon: Icons.visibility_outlined,
+                  color: OnboardingPalette.teal,
+                  surface: OnboardingPalette.paleTeal,
+                  title: 'Soy testigo',
+                  description: 'Reportar una situación que presencié',
+                  onTap: () {},
+                ),
+                const SizedBox(height: 16),
+                const _SectionTitle(
+                  eyebrow: 'SEGUIMIENTO',
+                  title: '¿Ya tienes un caso reportado?',
+                ),
+                const SizedBox(height: 10),
+                _TrackingCard(
+                  controller: trackingCodeController,
+                  onSubmitted: onCheckStatus,
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+
+    return SingleChildScrollView(
+      keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
+      physics: keyboardIsOpen
+          ? const ClampingScrollPhysics()
+          : const BouncingScrollPhysics(),
+      child: content,
+    );
+  }
+}
+
+class _ResponsiveBody extends StatelessWidget {
+  final Widget child;
+
+  const _ResponsiveBody({required this.child});
+
+  @override
+  Widget build(BuildContext context) {
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final horizontalPadding = constraints.maxWidth < 360 ? 14.0 : 22.0;
+        return SingleChildScrollView(
+          padding: EdgeInsets.fromLTRB(
+            horizontalPadding,
+            12,
+            horizontalPadding,
+            16,
+          ),
+          keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
+          child: ConstrainedBox(
+            constraints: BoxConstraints(
+              minHeight: constraints.maxHeight - 28,
+              maxWidth: 680,
+            ),
+            child: child,
+          ),
+        );
+      },
+    );
+  }
+}
+
+class _HomeHeader extends StatelessWidget {
+  final ValueChanged<String> onMenuSelected;
+  const _HomeHeader({required this.onMenuSelected});
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        const LilaWordmark(),
+        const Spacer(),
+        PopupMenuButton<String>(
+          color: Colors.white,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(18),
+          ),
+          onSelected: onMenuSelected,
+          itemBuilder: (context) => const [
+            PopupMenuItem(value: 'Guía', child: Text('Guía')),
+            PopupMenuItem(value: 'Opciones', child: Text('Opciones')),
+            PopupMenuItem(value: 'Información', child: Text('Información')),
+            PopupMenuItem(value: 'Ayuda', child: Text('Ayuda')),
+            PopupMenuItem(value: 'PQRS', child: Text('PQRS')),
+          ],
+          child: Container(
+            width: 46,
+            height: 46,
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(16),
+              boxShadow: [
+                BoxShadow(
+                  color: OnboardingPalette.purple.withValues(alpha: 0.1),
+                  blurRadius: 18,
+                  offset: const Offset(0, 6),
+                ),
+              ],
+            ),
+            child: const Icon(
+              Icons.menu_rounded,
+              color: OnboardingPalette.purple,
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _EmergencyCard extends StatelessWidget {
+  final double progress;
+  final ValueChanged<double> onChanged;
+  final VoidCallback onComplete;
+  const _EmergencyCard({
+    required this.progress,
+    required this.onChanged,
+    required this.onComplete,
+  });
+
+  @override
+  Widget build(BuildContext context) {
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.fromLTRB(18, 20, 18, 22),
+      padding: const EdgeInsets.all(15),
       decoration: BoxDecoration(
-        color: const Color(0xFFE36A6A),
-        borderRadius: BorderRadius.circular(34),
+        gradient: const LinearGradient(
+          colors: [Color(0xFFE96862), Color(0xFFD94755)],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        borderRadius: BorderRadius.circular(28),
+        boxShadow: [
+          BoxShadow(
+            color: const Color(0xFFD94755).withValues(alpha: 0.22),
+            blurRadius: 24,
+            offset: const Offset(0, 10),
+          ),
+        ],
       ),
       child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Icon(
-            Icons.notifications_none_rounded,
-            size: 54,
-            color: Colors.black87,
+          const Row(
+            children: [
+              _EmergencyIcon(),
+              SizedBox(width: 14),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      '¿Estás en peligro?',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 21,
+                        fontWeight: FontWeight.w800,
+                      ),
+                    ),
+                    SizedBox(height: 3),
+                    Text(
+                      'Activa una alerta de emergencia',
+                      style: TextStyle(color: Colors.white, fontSize: 14),
+                    ),
+                  ],
+                ),
+              ),
+            ],
           ),
-          const SizedBox(height: 18),
+          const SizedBox(height: 12),
           _PanicSlider(
-            value: _panicProgress,
-            onChanged: (value) => setState(() => _panicProgress = value),
-            onComplete: _triggerEmergency,
+            value: progress,
+            onChanged: onChanged,
+            onComplete: onComplete,
+          ),
+          const SizedBox(height: 6),
+          const Center(
+            child: Text(
+              'Desliza para activar el Botón de Pánico',
+              style: TextStyle(
+                color: Colors.white,
+                fontSize: 12,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
           ),
         ],
       ),
     );
   }
+}
 
-  Widget _buildEmergencyOverlay() {
-    return Positioned.fill(
-      child: Container(
-        color: Colors.red.withValues(alpha: 0.92),
-        child: SafeArea(
-          child: Center(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                const Icon(
-                  Icons.warning_amber_rounded,
-                  size: 90,
-                  color: Colors.white,
+class _EmergencyIcon extends StatelessWidget {
+  const _EmergencyIcon();
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: 50,
+      height: 50,
+      decoration: BoxDecoration(
+        color: Colors.white.withValues(alpha: 0.18),
+        shape: BoxShape.circle,
+      ),
+      child: const Icon(
+        Icons.notifications_active_outlined,
+        color: Colors.white,
+        size: 27,
+      ),
+    );
+  }
+}
+
+class _SectionTitle extends StatelessWidget {
+  final String eyebrow;
+  final String title;
+  const _SectionTitle({required this.eyebrow, required this.title});
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          eyebrow,
+          style: const TextStyle(
+            color: OnboardingPalette.teal,
+            fontSize: 11,
+            fontWeight: FontWeight.w800,
+            letterSpacing: 1.4,
+          ),
+        ),
+        const SizedBox(height: 4),
+        Text(
+          title,
+          style: const TextStyle(
+            color: OnboardingPalette.ink,
+            fontSize: 20,
+            fontWeight: FontWeight.w800,
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _CompactReportCard extends StatelessWidget {
+  final IconData icon;
+  final Color color;
+  final Color surface;
+  final String title;
+  final String description;
+  final VoidCallback onTap;
+
+  const _CompactReportCard({
+    required this.icon,
+    required this.color,
+    required this.surface,
+    required this.title,
+    required this.description,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: Colors.white,
+      borderRadius: BorderRadius.circular(20),
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(20),
+        child: Padding(
+          padding: const EdgeInsets.all(12),
+          child: Row(
+            children: [
+              Container(
+                width: 42,
+                height: 42,
+                decoration: BoxDecoration(
+                  color: surface,
+                  borderRadius: BorderRadius.circular(14),
                 ),
-                const SizedBox(height: 20),
-                const Text(
-                  '¡EMERGENCIA!',
-                  style: TextStyle(
-                    fontSize: 34,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.white,
-                    letterSpacing: 1.2,
-                  ),
-                ),
-                const SizedBox(height: 12),
-                const Padding(
-                  padding: EdgeInsets.symmetric(horizontal: 30),
-                  child: Text(
-                    'Se ha activado el modo de emergencia.',
-                    textAlign: TextAlign.center,
-                    style: TextStyle(fontSize: 18, color: Colors.white),
-                  ),
-                ),
-                const SizedBox(height: 34),
-                GestureDetector(
-                  onTap: _closeEmergency,
-                  child: Container(
-                    width: 92,
-                    height: 92,
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      shape: BoxShape.circle,
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withValues(alpha: 0.18),
-                          blurRadius: 16,
-                          offset: const Offset(0, 6),
-                        ),
-                      ],
+                child: Icon(icon, color: color, size: 23),
+              ),
+              const SizedBox(width: 9),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      title,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(
+                        color: OnboardingPalette.ink,
+                        fontSize: 14,
+                        fontWeight: FontWeight.w800,
+                      ),
                     ),
-                    child: const Icon(Icons.call_end, size: 42, color: Colors.red),
-                  ),
+                    const SizedBox(height: 2),
+                    Text(
+                      description,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                        color: OnboardingPalette.ink.withValues(alpha: 0.62),
+                        fontSize: 11,
+                      ),
+                    ),
+                  ],
                 ),
-                const SizedBox(height: 16),
-                const Text(
-                  'Toca para desactivar',
-                  style: TextStyle(color: Colors.white, fontSize: 15),
-                ),
-              ],
-            ),
+              ),
+            ],
           ),
         ),
       ),
@@ -327,66 +587,166 @@ class _HomePageState extends State<HomePage> {
   }
 }
 
-class _MainButton extends StatelessWidget {
-  final String text;
-  final bool filled;
-  final bool lightFilled;
-  final double width;
-  final VoidCallback? onTap;
-  final bool isLoading;
-
-  const _MainButton({
-    required this.text,
-    required this.filled,
-    required this.width,
+class _ReportActionCard extends StatelessWidget {
+  final IconData icon;
+  final Color color;
+  final Color surface;
+  final String title;
+  final String description;
+  final VoidCallback onTap;
+  const _ReportActionCard({
+    required this.icon,
+    required this.color,
+    required this.surface,
+    required this.title,
+    required this.description,
     required this.onTap,
-    this.lightFilled = false,
-    this.isLoading = false,
   });
 
   @override
   Widget build(BuildContext context) {
-    final bgColor = filled
-        ? Colors.black87
-        : lightFilled
-            ? Colors.grey.shade300
-            : Colors.grey.shade200;
-    final fgColor = filled ? Colors.white : Colors.black87;
-
-    return SizedBox(
-      width: width,
-      child: Material(
-        color: bgColor,
-        borderRadius: BorderRadius.circular(14),
-        child: InkWell(
-          onTap: onTap,
-          borderRadius: BorderRadius.circular(14),
-          child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(14),
-              border: filled ? null : Border.all(color: Colors.grey.shade400),
-            ),
-            child: isLoading
-                ? const SizedBox(
-                    height: 20,
-                    width: 20,
-                    child: CircularProgressIndicator(
-                      strokeWidth: 2.4,
-                      color: Colors.black87,
+    return Material(
+      color: Colors.white,
+      borderRadius: BorderRadius.circular(22),
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(22),
+        child: Container(
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(22),
+            border: Border.all(color: color.withValues(alpha: 0.1)),
+          ),
+          child: Row(
+            children: [
+              Container(
+                width: 52,
+                height: 52,
+                decoration: BoxDecoration(
+                  color: surface,
+                  borderRadius: BorderRadius.circular(17),
+                ),
+                child: Icon(icon, color: color, size: 28),
+              ),
+              const SizedBox(width: 14),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      title,
+                      style: const TextStyle(
+                        color: OnboardingPalette.ink,
+                        fontSize: 17,
+                        fontWeight: FontWeight.w800,
+                      ),
                     ),
-                  )
-                : Text(
-                    text,
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                      color: fgColor,
-                      fontSize: 15,
-                      fontWeight: FontWeight.w600,
+                    const SizedBox(height: 3),
+                    Text(
+                      description,
+                      style: TextStyle(
+                        color: OnboardingPalette.ink.withValues(alpha: 0.68),
+                        fontSize: 13,
+                      ),
                     ),
-                  ),
+                  ],
+                ),
+              ),
+              Container(
+                width: 36,
+                height: 36,
+                decoration: BoxDecoration(color: color, shape: BoxShape.circle),
+                child: const Icon(
+                  Icons.arrow_forward_rounded,
+                  color: Colors.white,
+                  size: 20,
+                ),
+              ),
+            ],
           ),
         ),
+      ),
+    );
+  }
+}
+
+class _TrackingCard extends StatelessWidget {
+  final TextEditingController controller;
+  final VoidCallback onSubmitted;
+  const _TrackingCard({required this.controller, required this.onSubmitted});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(24),
+        boxShadow: [
+          BoxShadow(
+            color: OnboardingPalette.purple.withValues(alpha: 0.07),
+            blurRadius: 20,
+            offset: const Offset(0, 8),
+          ),
+        ],
+      ),
+      child: Column(
+        children: [
+          TextField(
+            controller: controller,
+            textInputAction: TextInputAction.search,
+            onSubmitted: (_) => onSubmitted(),
+            decoration: InputDecoration(
+              hintText: 'Ingresa tu código o radicado anónimo',
+              hintStyle: TextStyle(
+                color: OnboardingPalette.ink.withValues(alpha: 0.5),
+                fontSize: 13,
+              ),
+              prefixIcon: const Icon(
+                Icons.tag_rounded,
+                color: OnboardingPalette.purple,
+              ),
+              filled: true,
+              fillColor: OnboardingPalette.background,
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(16),
+                borderSide: BorderSide.none,
+              ),
+            ),
+          ),
+          const SizedBox(height: 8),
+          Consumer<CaseStatusViewModel>(
+            builder: (context, vm, child) => SizedBox(
+              width: double.infinity,
+              height: 50,
+              child: ElevatedButton(
+                onPressed: vm.isLoading ? null : onSubmitted,
+                style: ElevatedButton.styleFrom(
+                  elevation: 0,
+                  backgroundColor: OnboardingPalette.purple,
+                  foregroundColor: Colors.white,
+                  disabledBackgroundColor: OnboardingPalette.palePurple,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                ),
+                child: vm.isLoading
+                    ? const SizedBox(
+                        width: 22,
+                        height: 22,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2.4,
+                          color: Colors.white,
+                        ),
+                      )
+                    : const Text(
+                        'Consultar estado',
+                        style: TextStyle(fontWeight: FontWeight.w700),
+                      ),
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -396,20 +756,17 @@ class _PanicSlider extends StatefulWidget {
   final double value;
   final ValueChanged<double> onChanged;
   final VoidCallback onComplete;
-
   const _PanicSlider({
     required this.value,
     required this.onChanged,
     required this.onComplete,
   });
-
   @override
   State<_PanicSlider> createState() => _PanicSliderState();
 }
 
 class _PanicSliderState extends State<_PanicSlider> {
-  double _localValue = 0.0;
-
+  double _localValue = 0;
   @override
   void initState() {
     super.initState();
@@ -426,61 +783,62 @@ class _PanicSliderState extends State<_PanicSlider> {
   Widget build(BuildContext context) {
     return LayoutBuilder(
       builder: (context, constraints) {
-        const knobSize = 52.0;
-        const trackHeight = 24.0;
-        final maxDrag = constraints.maxWidth - knobSize;
-
-        return SizedBox(
-          height: knobSize,
+        const knobSize = 48.0;
+        final maxDrag = constraints.maxWidth - knobSize - 6;
+        return Container(
+          height: 54,
+          padding: const EdgeInsets.all(3),
+          decoration: BoxDecoration(
+            color: const Color(0xFFB92F43).withValues(alpha: 0.72),
+            borderRadius: BorderRadius.circular(18),
+          ),
           child: Stack(
-            alignment: Alignment.centerLeft,
             children: [
-              Container(
-                height: trackHeight,
-                decoration: BoxDecoration(
-                  color: const Color(0xFFB71C1C),
-                  borderRadius: BorderRadius.circular(30),
-                ),
-              ),
-              Container(
-                width: knobSize + (_localValue * maxDrag),
-                height: trackHeight,
-                decoration: BoxDecoration(
-                  color: const Color(0xFFD32F2F),
-                  borderRadius: BorderRadius.circular(30),
+              const Center(
+                child: Icon(
+                  Icons.keyboard_double_arrow_right_rounded,
+                  color: Colors.white54,
+                  size: 30,
                 ),
               ),
               Positioned(
                 left: _localValue * maxDrag,
                 child: GestureDetector(
                   onHorizontalDragUpdate: (details) {
-                    setState(() {
-                      _localValue += details.delta.dx / maxDrag;
-                      _localValue = _localValue.clamp(0.0, 1.0);
-                    });
+                    setState(
+                      () => _localValue =
+                          (_localValue + details.delta.dx / maxDrag).clamp(
+                            0,
+                            1,
+                          ),
+                    );
                     widget.onChanged(_localValue);
                   },
                   onHorizontalDragEnd: (_) {
                     if (_localValue > 0.92) {
                       widget.onComplete();
                     } else {
-                      setState(() => _localValue = 0.0);
-                      widget.onChanged(_localValue);
+                      setState(() => _localValue = 0);
+                      widget.onChanged(0);
                     }
                   },
                   child: Container(
                     width: knobSize,
                     height: knobSize,
                     decoration: BoxDecoration(
-                      color: Colors.grey.shade200,
-                      borderRadius: BorderRadius.circular(18),
-                      boxShadow: [
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(15),
+                      boxShadow: const [
                         BoxShadow(
-                          color: Colors.black.withValues(alpha: 0.12),
-                          blurRadius: 10,
-                          offset: const Offset(0, 3),
+                          color: Colors.black12,
+                          blurRadius: 8,
+                          offset: Offset(0, 3),
                         ),
                       ],
+                    ),
+                    child: const Icon(
+                      Icons.notifications_active_rounded,
+                      color: Color(0xFFD94755),
                     ),
                   ),
                 ),
@@ -489,6 +847,106 @@ class _PanicSliderState extends State<_PanicSlider> {
           ),
         );
       },
+    );
+  }
+}
+
+class _EmergencyOverlay extends StatelessWidget {
+  final VoidCallback onClose;
+  const _EmergencyOverlay({required this.onClose});
+  @override
+  Widget build(BuildContext context) {
+    return Positioned.fill(
+      child: ColoredBox(
+        color: const Color(0xFFE24951),
+        child: Center(
+          child: Padding(
+            padding: const EdgeInsets.all(30),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Container(
+                  width: 112,
+                  height: 112,
+                  decoration: BoxDecoration(
+                    color: Colors.white.withValues(alpha: 0.16),
+                    shape: BoxShape.circle,
+                  ),
+                  child: const Icon(
+                    Icons.warning_amber_rounded,
+                    size: 62,
+                    color: Colors.white,
+                  ),
+                ),
+                const SizedBox(height: 24),
+                const Text(
+                  '¡EMERGENCIA!',
+                  style: TextStyle(
+                    fontSize: 32,
+                    fontWeight: FontWeight.w900,
+                    color: Colors.white,
+                  ),
+                ),
+                const SizedBox(height: 10),
+                const Text(
+                  'Se ha activado el modo de emergencia.',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(fontSize: 17, color: Colors.white),
+                ),
+                const SizedBox(height: 32),
+                FilledButton.icon(
+                  onPressed: onClose,
+                  style: FilledButton.styleFrom(
+                    backgroundColor: Colors.white,
+                    foregroundColor: const Color(0xFFE24951),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 22,
+                      vertical: 15,
+                    ),
+                  ),
+                  icon: const Icon(Icons.call_end_rounded),
+                  label: const Text('Toca para desactivar'),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _HomeBackground extends StatelessWidget {
+  const _HomeBackground();
+  @override
+  Widget build(BuildContext context) {
+    return Stack(
+      children: [
+        Positioned(
+          top: -90,
+          right: -80,
+          child: Container(
+            width: 230,
+            height: 230,
+            decoration: const BoxDecoration(
+              color: OnboardingPalette.palePurple,
+              shape: BoxShape.circle,
+            ),
+          ),
+        ),
+        Positioned(
+          top: 260,
+          left: -90,
+          child: Container(
+            width: 180,
+            height: 180,
+            decoration: BoxDecoration(
+              color: OnboardingPalette.paleTeal.withValues(alpha: 0.7),
+              shape: BoxShape.circle,
+            ),
+          ),
+        ),
+      ],
     );
   }
 }

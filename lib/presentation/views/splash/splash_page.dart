@@ -4,11 +4,7 @@ import 'package:provider/provider.dart';
 import '../../viewmodels/auth_viewmodel.dart';
 import '../onboarding/onboarding_page.dart';
 
-/// Pantalla de arranque: ejecuta el registro silencioso del dispositivo
-/// (`AuthViewModel.initialize()`) y luego navega al onboarding.
-///
-/// Si el dispositivo ya tiene `idUsuario` cacheado, la transición es
-/// prácticamente instantánea.
+/// Inicializa silenciosamente al usuario antes de abrir el onboarding.
 class SplashPage extends StatefulWidget {
   const SplashPage({super.key});
 
@@ -17,6 +13,8 @@ class SplashPage extends StatefulWidget {
 }
 
 class _SplashPageState extends State<SplashPage> {
+  static const _purple = Color(0xFF4E3D9B);
+
   @override
   void initState() {
     super.initState();
@@ -33,78 +31,37 @@ class _SplashPageState extends State<SplashPage> {
         MaterialPageRoute(builder: (_) => const OnboardingPage()),
       );
     }
-    // Si falla, dejamos que la UI muestre el error y un botón de reintento.
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF5F5F5),
-      body: SafeArea(
-        child: Consumer<AuthViewModel>(
-          builder: (context, vm, _) {
-            return Center(
-              child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 32),
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    const Text(
-                      'LILA',
-                      style: TextStyle(
-                        fontSize: 38,
-                        fontWeight: FontWeight.w800,
-                        color: Colors.black87,
-                        letterSpacing: 1.4,
-                      ),
-                    ),
-                    const SizedBox(height: 28),
-                    if (vm.errorMessage == null) ...[
-                      const CircularProgressIndicator(color: Colors.black87),
-                      const SizedBox(height: 18),
-                      const Text(
-                        'Preparando tu espacio seguro...',
-                        textAlign: TextAlign.center,
-                        style: TextStyle(fontSize: 15, color: Colors.black87),
-                      ),
-                    ] else ...[
-                      Icon(
-                        Icons.wifi_off_rounded,
-                        size: 56,
-                        color: Colors.red.shade400,
-                      ),
-                      const SizedBox(height: 14),
-                      Text(
-                        vm.errorMessage!,
-                        textAlign: TextAlign.center,
-                        style: const TextStyle(
-                          fontSize: 14,
-                          color: Colors.black87,
-                        ),
-                      ),
-                      const SizedBox(height: 22),
-                      ElevatedButton(
-                        onPressed: vm.isLoading ? null : _bootstrap,
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.black87,
-                          foregroundColor: Colors.white,
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 28,
-                            vertical: 14,
-                          ),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                        ),
-                        child: const Text('Reintentar'),
-                      ),
-                    ],
-                  ],
+      backgroundColor: const Color(0xFFF2F6F9),
+      body: Consumer<AuthViewModel>(
+        builder: (context, vm, _) {
+          return Center(
+            child: Semantics(
+              label: vm.errorMessage == null
+                  ? 'Inicializando la aplicación'
+                  : 'No fue posible iniciar. Toca para reintentar',
+              button: vm.errorMessage != null,
+              child: InkResponse(
+                onTap: vm.errorMessage != null && !vm.isLoading
+                    ? _bootstrap
+                    : null,
+                radius: 38,
+                child: const SizedBox.square(
+                  dimension: 52,
+                  child: CircularProgressIndicator(
+                    color: _purple,
+                    strokeWidth: 4.5,
+                    strokeCap: StrokeCap.round,
+                  ),
                 ),
               ),
-            );
-          },
-        ),
+            ),
+          );
+        },
       ),
     );
   }

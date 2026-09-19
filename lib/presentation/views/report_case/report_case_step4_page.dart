@@ -1,30 +1,26 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-
 import '../../viewmodels/report_case_viewmodel.dart';
-import '../../widgets/app_bottom_bar.dart';
-import '../../widgets/primary_action_button.dart';
-import '../../widgets/progress_header.dart';
-import '../../widgets/side_chat.dart';
+import '../onboarding/onboarding_style.dart';
 import 'report_case_step5_page.dart';
+import 'report_step_layout.dart';
 
-/// Paso 4 — Descripción libre del caso. Reemplaza el `Text` placeholder
-/// original por un `TextField` real conectado al ViewModel.
 class ReportCaseStep4Page extends StatefulWidget {
   const ReportCaseStep4Page({super.key});
-
   @override
   State<ReportCaseStep4Page> createState() => _ReportCaseStep4PageState();
 }
 
 class _ReportCaseStep4PageState extends State<ReportCaseStep4Page> {
   late final TextEditingController _descController;
+  String? _error;
 
   @override
   void initState() {
     super.initState();
-    final vm = context.read<ReportCaseViewModel>();
-    _descController = TextEditingController(text: vm.descripcion);
+    _descController = TextEditingController(
+      text: context.read<ReportCaseViewModel>().descripcion,
+    );
   }
 
   @override
@@ -33,24 +29,14 @@ class _ReportCaseStep4PageState extends State<ReportCaseStep4Page> {
     super.dispose();
   }
 
-  String get _dynamicTitle {
-    final vm = context.read<ReportCaseViewModel>();
-    return vm.pasoInstitucion == true
-        ? 'Contexto institucional'
-        : 'Contexto de la situación';
-  }
-
   void _goNext() {
     final text = _descController.text.trim();
     if (text.length < 10) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('La descripción debe tener al menos 10 caracteres.'),
-        ),
-      );
+      setState(() => _error = 'Escribe al menos 10 caracteres para continuar.');
       return;
     }
     context.read<ReportCaseViewModel>().setDescripcion(text);
+    FocusScope.of(context).unfocus();
     Navigator.push(
       context,
       MaterialPageRoute(builder: (_) => const ReportCaseStep5Page()),
@@ -58,84 +44,88 @@ class _ReportCaseStep4PageState extends State<ReportCaseStep4Page> {
   }
 
   @override
-  Widget build(BuildContext context) {
-    final size = MediaQuery.of(context).size;
-    final w = size.width;
-    final h = size.height;
-
-    final horizontalPadding = (w * 0.08).clamp(20.0, 34.0);
-    final titleSize = (w * 0.052).clamp(19.0, 24.0);
-
-    return Scaffold(
-      backgroundColor: const Color(0xFFF5F5F5),
-      body: SafeArea(
-        child: Stack(
-          children: [
-            SingleChildScrollView(
-              padding: EdgeInsets.fromLTRB(
-                horizontalPadding, 14, horizontalPadding, 150,
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const ProgressHeader(progress: 0.95),
-                  const SizedBox(height: 18),
-                  Text(
-                    'Paso 4: $_dynamicTitle',
-                    style: TextStyle(
-                      fontSize: titleSize,
-                      fontWeight: FontWeight.w600,
-                      color: Colors.black87,
-                    ),
-                  ),
-                  SizedBox(height: (h * 0.045).clamp(18.0, 36.0)),
-                  Container(
-                    width: double.infinity,
-                    height: (h * 0.46).clamp(260.0, 420.0),
-                    padding: const EdgeInsets.all(20),
-                    decoration: BoxDecoration(
-                      color: Colors.grey.shade300,
-                      borderRadius: BorderRadius.circular(36),
-                    ),
-                    child: TextField(
-                      controller: _descController,
-                      maxLines: null,
-                      expands: true,
-                      textAlignVertical: TextAlignVertical.top,
-                      style: const TextStyle(
-                        fontSize: 18,
-                        color: Colors.black87,
-                        fontWeight: FontWeight.w500,
-                      ),
-                      decoration: InputDecoration(
-                        hintText: 'Describe tu caso...',
-                        hintStyle: TextStyle(
-                          fontSize: 18,
-                          color: Colors.grey.shade700,
-                          fontWeight: FontWeight.w500,
-                        ),
-                        border: InputBorder.none,
-                      ),
-                    ),
-                  ),
-                  SizedBox(height: (h * 0.19).clamp(90.0, 170.0)),
-                  Center(
-                    child: SizedBox(
-                      width: (w * 0.42).clamp(160.0, 220.0),
-                      child: PrimaryActionButton(
-                        text: 'Siguiente paso',
-                        onTap: _goNext,
-                      ),
-                    ),
-                  ),
-                ],
+  Widget build(BuildContext context) => ReportStepLayout(
+    step: 4,
+    section: 'Descripción',
+    title: 'Te escuchamos',
+    subtitle: 'Cuéntanos lo que pasó con tus propias palabras.',
+    onNext: _goNext,
+    onHelp: () => showReportHelp(
+      context,
+      title: 'Cuéntanos lo ocurrido',
+      child: const Text(
+        'Puedes describir qué ocurrió, cuándo y dónde, e incluir los detalles que consideres importantes. Necesitamos al menos 10 caracteres para continuar. Tu relato se conserva mientras avanzas o vuelves entre estos pasos.',
+        style: reportSecondaryStyle,
+      ),
+    ),
+    contentBuilder: (compact) => Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        const ReportNote(text: 'Puedes tomarte el tiempo que necesites.'),
+        const SizedBox(height: 20),
+        TextField(
+          controller: _descController,
+          minLines: compact ? 6 : 9,
+          maxLines: compact ? 6 : 9,
+          keyboardType: TextInputType.multiline,
+          textCapitalization: TextCapitalization.sentences,
+          textAlignVertical: TextAlignVertical.top,
+          cursorColor: OnboardingPalette.purple,
+          onChanged: (value) {
+            context.read<ReportCaseViewModel>().setDescripcion(value);
+            if (_error != null) setState(() => _error = null);
+          },
+          style: const TextStyle(
+            color: Color(0xFF25204F),
+            fontSize: 14,
+            height: 1.5,
+          ),
+          decoration: InputDecoration(
+            labelText: 'Descripción del caso',
+            floatingLabelBehavior: FloatingLabelBehavior.always,
+            labelStyle: const TextStyle(
+              color: OnboardingPalette.purple,
+              fontWeight: FontWeight.w600,
+            ),
+            hintText: 'Puedes contar qué ocurrió, cuándo y dónde.',
+            hintStyle: reportSecondaryStyle,
+            filled: true,
+            fillColor: Colors.white,
+            contentPadding: const EdgeInsets.all(16),
+            errorText: _error,
+            errorMaxLines: 2,
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(14),
+              borderSide: const BorderSide(color: OnboardingPalette.purple),
+            ),
+            enabledBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(14),
+              borderSide: const BorderSide(color: OnboardingPalette.purple),
+            ),
+            focusedBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(14),
+              borderSide: const BorderSide(
+                color: OnboardingPalette.purple,
+                width: 2,
               ),
             ),
-            const AppBottomBar(),
-            const SideChat(),
-          ],
+          ),
         ),
-      ),
-    );
-  }
+        const SizedBox(height: 6),
+        ValueListenableBuilder<TextEditingValue>(
+          valueListenable: _descController,
+          builder: (context, value, _) => Text(
+            '${value.text.characters.length} caracteres',
+            textAlign: TextAlign.right,
+            style: reportSecondaryStyle.copyWith(fontSize: 11),
+          ),
+        ),
+        const SizedBox(height: 8),
+        const Text(
+          'Incluye los detalles que consideres importantes.',
+          style: reportSecondaryStyle,
+        ),
+      ],
+    ),
+  );
 }

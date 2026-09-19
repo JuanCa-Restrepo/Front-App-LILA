@@ -74,6 +74,7 @@ flutter:
 
   assets:
     - assets/service_account.json
+    - assets/images/onboarding_support.png
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/to/resolution-aware-images
