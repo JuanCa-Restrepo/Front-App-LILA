@@ -106,6 +106,30 @@ Future<void> _continue(WidgetTester tester) async {
 }
 
 void main() {
+  test(
+    'Demo report reaches confirmation without calling repositories',
+    () async {
+      final report =
+          ReportCaseViewModel(
+              casoRepository: _Cases(),
+              evidenciaRepository: _Evidence(),
+              driveUploader: const GoogleDriveUploaderStub(),
+              authService: const AuthService(FlutterSecureStorage()),
+              demoMode: true,
+            )
+            ..setIdTipoAcoso(21)
+            ..setPasoInstitucion(true)
+            ..setDescripcion('Descripción de prueba suficientemente larga.');
+      addTearDown(report.dispose);
+
+      expect(
+        await report.submit().timeout(const Duration(milliseconds: 100)),
+        isTrue,
+      );
+      expect(report.generatedCodigoCaso, startsWith('LILA-DEMO-'));
+    },
+  );
+
   setUpAll(() async {
     final icons = FontLoader('MaterialIcons')
       ..addFont(rootBundle.load('fonts/MaterialIcons-Regular.otf'));

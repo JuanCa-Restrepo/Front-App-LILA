@@ -75,8 +75,7 @@ class ReportStepLayout extends StatelessWidget {
                       wide ? 28 : 16,
                       4,
                     ),
-                    sliver: SliverFillRemaining(
-                      hasScrollBody: false,
+                    sliver: SliverToBoxAdapter(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.stretch,
                         children: [
@@ -183,8 +182,7 @@ class ReportStepLayout extends StatelessWidget {
                             SizedBox(height: compact ? 14 : 20),
                             contentBuilder(compact),
                           ],
-                          const Spacer(),
-                          const SizedBox(height: 16),
+                          SizedBox(height: compact ? 20 : 28),
                           FilledButton(
                             onPressed: actionLoading ? null : onNext,
                             style: FilledButton.styleFrom(

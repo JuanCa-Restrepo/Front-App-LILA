@@ -46,16 +46,19 @@ class ReportCaseViewModel extends BaseViewModel {
   final EvidenciaRepository _evidenciaRepository;
   final GoogleDriveUploader _driveUploader;
   final AuthService _authService;
+  final bool _demoMode;
 
   ReportCaseViewModel({
     required CasoRepository casoRepository,
     required EvidenciaRepository evidenciaRepository,
     required GoogleDriveUploader driveUploader,
     required AuthService authService,
+    bool demoMode = false,
   }) : _casoRepository = casoRepository,
        _evidenciaRepository = evidenciaRepository,
        _driveUploader = driveUploader,
-       _authService = authService;
+       _authService = authService,
+       _demoMode = demoMode;
 
   // ===== Step 1 — datos del afectado =====
   AffectedPersonType _personType = AffectedPersonType.adolescente;
@@ -142,12 +145,22 @@ class ReportCaseViewModel extends BaseViewModel {
 
   /// Crea el caso, sube evidencias a Drive y registra cada URL.
   /// Retorna `true` si el caso se creó correctamente.
-  /// Modo visual/demo: si no hay backend, genera un código local.
+  /// En modo demo genera un código local sin esperar al backend.
   Future<bool> submit() async {
     final validation = validateBeforeSubmit();
     if (validation != null) {
       setError(validation);
       return false;
+    }
+
+    // El flujo visual no necesita esperar una conexión que no está disponible.
+    // La pantalla final identifica este código como demostración.
+    if (_demoMode) {
+      _generatedCodigoCaso =
+          'LILA-DEMO-${DateTime.now().millisecondsSinceEpoch % 100000}';
+      clearError();
+      notifyListeners();
+      return true;
     }
 
     var userId = await _authService.getUserId();
@@ -191,12 +204,7 @@ class ReportCaseViewModel extends BaseViewModel {
       return true;
     }
 
-    // Sin backend: éxito simulado para recorrer las vistas.
-    clearError();
-    _generatedCodigoCaso =
-        'LILA-DEMO-${DateTime.now().millisecondsSinceEpoch % 100000}';
-    notifyListeners();
-    return true;
+    return false;
   }
 
   /// Limpia todo el estado para iniciar un nuevo reporte.

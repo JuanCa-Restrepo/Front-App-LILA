@@ -147,6 +147,7 @@ class App extends StatelessWidget {
             evidenciaRepository: ctx.read<EvidenciaRepository>(),
             driveUploader: ctx.read<GoogleDriveUploader>(),
             authService: ctx.read<AuthService>(),
+            demoMode: true,
           ),
         ),
         ChangeNotifierProvider(
