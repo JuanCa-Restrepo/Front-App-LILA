@@ -75,7 +75,8 @@ class _HomePageState extends State<HomePage> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: OnboardingPalette.background,
-      bottomNavigationBar: MediaQuery.viewInsetsOf(context).bottom > 0
+      bottomNavigationBar:
+          _showEmergencyOverlay || MediaQuery.viewInsetsOf(context).bottom > 0
           ? null
           : const AppBottomBar.embedded(),
       body: SafeArea(
@@ -177,7 +178,7 @@ class _HomePageState extends State<HomePage> {
                 );
               },
             ),
-            const SideChat(bottom: 18),
+            if (!_showEmergencyOverlay) const SideChat(bottom: 18),
             if (_showEmergencyOverlay)
               _EmergencyOverlay(onClose: _closeEmergency),
           ],
@@ -861,58 +862,126 @@ class _EmergencyOverlay extends StatelessWidget {
   Widget build(BuildContext context) {
     return Positioned.fill(
       child: ColoredBox(
-        color: const Color(0xFFE24951),
-        child: Center(
-          child: Padding(
-            padding: const EdgeInsets.all(30),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Container(
-                  width: 112,
-                  height: 112,
-                  decoration: BoxDecoration(
-                    color: Colors.white.withValues(alpha: 0.16),
-                    shape: BoxShape.circle,
-                  ),
-                  child: const Icon(
-                    Icons.warning_amber_rounded,
-                    size: 62,
-                    color: Colors.white,
-                  ),
-                ),
-                const SizedBox(height: 24),
-                const Text(
-                  '¡EMERGENCIA!',
-                  style: TextStyle(
-                    fontSize: 32,
-                    fontWeight: FontWeight.w900,
-                    color: Colors.white,
-                  ),
-                ),
-                const SizedBox(height: 10),
-                const Text(
-                  'Se ha activado el modo de emergencia.',
-                  textAlign: TextAlign.center,
-                  style: TextStyle(fontSize: 17, color: Colors.white),
-                ),
-                const SizedBox(height: 32),
-                FilledButton.icon(
-                  onPressed: onClose,
-                  style: FilledButton.styleFrom(
-                    backgroundColor: Colors.white,
-                    foregroundColor: const Color(0xFFE24951),
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 22,
-                      vertical: 15,
+        color: OnboardingPalette.background,
+        child: Stack(
+          children: [
+            const Positioned.fill(child: _HomeBackground()),
+            LayoutBuilder(
+              builder: (context, constraints) => SingleChildScrollView(
+                child: Center(
+                  child: ConstrainedBox(
+                    constraints: BoxConstraints(
+                      maxWidth: 640,
+                      minHeight: constraints.maxHeight,
+                    ),
+                    child: Padding(
+                      padding: const EdgeInsets.fromLTRB(22, 16, 22, 24),
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Row(
+                            children: [
+                              const LilaWordmark(),
+                              const Spacer(),
+                              IconButton.filledTonal(
+                                tooltip: 'Cerrar modo de emergencia',
+                                onPressed: onClose,
+                                icon: const Icon(Icons.close_rounded),
+                                style: IconButton.styleFrom(
+                                  backgroundColor: OnboardingPalette.palePurple,
+                                  foregroundColor: OnboardingPalette.purple,
+                                ),
+                              ),
+                            ],
+                          ),
+                          Padding(
+                            padding: const EdgeInsets.symmetric(vertical: 28),
+                            child: Column(
+                              children: [
+                                Container(
+                                  width: 96,
+                                  height: 96,
+                                  decoration: const BoxDecoration(
+                                    color: Color(0xFFFBE9EB),
+                                    shape: BoxShape.circle,
+                                  ),
+                                  child: const Icon(
+                                    Icons.notifications_active_outlined,
+                                    size: 48,
+                                    color: Color(0xFFD94755),
+                                  ),
+                                ),
+                                const SizedBox(height: 24),
+                                Container(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 14,
+                                    vertical: 8,
+                                  ),
+                                  decoration: BoxDecoration(
+                                    color: const Color(0xFFFBE9EB),
+                                    borderRadius: BorderRadius.circular(30),
+                                  ),
+                                  child: const Text(
+                                    'ALERTA DE EMERGENCIA',
+                                    style: TextStyle(
+                                      color: Color(0xFFD94755),
+                                      fontSize: 11,
+                                      fontWeight: FontWeight.w800,
+                                      letterSpacing: 1.2,
+                                    ),
+                                  ),
+                                ),
+                                const SizedBox(height: 16),
+                                const Text(
+                                  'Modo de emergencia\nactivo',
+                                  textAlign: TextAlign.center,
+                                  style: TextStyle(
+                                    color: OnboardingPalette.purple,
+                                    fontSize: 28,
+                                    fontWeight: FontWeight.w800,
+                                    height: 1.12,
+                                  ),
+                                ),
+                                const SizedBox(height: 12),
+                                const Text(
+                                  'Se ha activado el modo de emergencia.',
+                                  textAlign: TextAlign.center,
+                                  style: TextStyle(
+                                    color: OnboardingPalette.ink,
+                                    fontSize: 16,
+                                    height: 1.4,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          SizedBox(
+                            width: double.infinity,
+                            height: 54,
+                            child: FilledButton.icon(
+                              onPressed: onClose,
+                              style: FilledButton.styleFrom(
+                                backgroundColor: OnboardingPalette.purple,
+                                foregroundColor: Colors.white,
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(16),
+                                ),
+                              ),
+                              icon: const Icon(Icons.close_rounded),
+                              label: const Text(
+                                'Desactivar modo de emergencia',
+                                style: TextStyle(fontWeight: FontWeight.w700),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
                   ),
-                  icon: const Icon(Icons.call_end_rounded),
-                  label: const Text('Toca para desactivar'),
                 ),
-              ],
+              ),
             ),
-          ),
+          ],
         ),
       ),
     );

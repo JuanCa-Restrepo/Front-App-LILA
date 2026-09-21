@@ -462,6 +462,49 @@ void main() {
     expect(tester.takeException(), isNull);
   });
 
+  for (final size in [const Size(320, 568), const Size(390, 844)]) {
+    testWidgets('El botón de pánico abre y cierra su vista en $size', (
+      tester,
+    ) async {
+      _size(tester, size);
+      final report = _report();
+      final status = CaseStatusViewModel(
+        casoRepository: _Cases(),
+        responsableRepository: _Responsibles(),
+        evidenciaRepository: _Evidence(),
+      );
+      addTearDown(report.dispose);
+      addTearDown(status.dispose);
+      await tester.pumpWidget(
+        MultiProvider(
+          providers: [
+            ChangeNotifierProvider.value(value: report),
+            ChangeNotifierProvider.value(value: status),
+          ],
+          child: const MaterialApp(home: HomePage()),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      await tester.drag(
+        find.byIcon(Icons.notifications_active_rounded),
+        const Offset(400, 0),
+      );
+      await tester.pumpAndSettle();
+
+      expect(find.text('Modo de emergencia\nactivo'), findsOneWidget);
+      expect(find.byType(AppBottomBar), findsNothing);
+      expect(tester.takeException(), isNull);
+
+      await tester.tap(find.text('Desactivar modo de emergencia'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Modo de emergencia\nactivo'), findsNothing);
+      expect(find.byType(AppBottomBar), findsOneWidget);
+      expect(tester.takeException(), isNull);
+    });
+  }
+
   for (final size in [
     const Size(320, 568),
     const Size(390, 844),
