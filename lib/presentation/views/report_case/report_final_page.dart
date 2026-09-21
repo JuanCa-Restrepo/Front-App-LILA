@@ -4,14 +4,12 @@ import 'package:provider/provider.dart';
 
 import '../../viewmodels/case_status_viewmodel.dart';
 import '../../viewmodels/report_case_viewmodel.dart';
-import '../../widgets/app_bottom_bar.dart';
-import '../../widgets/primary_action_button.dart';
-import '../../widgets/side_chat.dart';
 import '../case_status/state_report_page.dart';
 import '../home/home_page.dart';
+import '../onboarding/onboarding_style.dart';
+import 'report_step_layout.dart';
 
-/// Pantalla de éxito tras `submit()`. Muestra el `codigoCaso` plano
-/// generado por el backend para que el usuario lo guarde.
+/// Confirmación del flujo y acceso al código para consultar el caso.
 class ReportFinalPage extends StatelessWidget {
   const ReportFinalPage({super.key});
 
@@ -25,15 +23,13 @@ class ReportFinalPage extends StatelessWidget {
         MaterialPageRoute(builder: (_) => const StateReportPage()),
       );
     } else if (caseStatus.errorMessage != null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(caseStatus.errorMessage!)),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(caseStatus.errorMessage!)));
     }
   }
 
   void _backToHome(BuildContext context) {
-    // Limpiamos el flujo de reporte y volvemos al Home descartando la
-    // pila completa, así no queda historial del wizard.
     context.read<ReportCaseViewModel>().reset();
     Navigator.pushAndRemoveUntil(
       context,
@@ -44,175 +40,248 @@ class ReportFinalPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final size = MediaQuery.of(context).size;
-    final w = size.width;
-    final h = size.height;
-
-    final horizontalPadding = (w * 0.08).clamp(20.0, 34.0);
-    final titleSize = (w * 0.05).clamp(18.0, 23.0);
+    final codigo = context.watch<ReportCaseViewModel>().generatedCodigoCaso;
+    final isDemo = codigo?.startsWith('LILA-DEMO-') ?? false;
+    final canCheckStatus = codigo != null && !isDemo;
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF5F5F5),
+      backgroundColor: OnboardingPalette.background,
+      bottomNavigationBar: SafeArea(
+        top: false,
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(20, 8, 20, 12),
+          child: Center(
+            heightFactor: 1,
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 640),
+              child: FilledButton.icon(
+                onPressed: canCheckStatus
+                    ? () => _openStatus(context, codigo)
+                    : () => _backToHome(context),
+                icon: Icon(
+                  canCheckStatus ? Icons.search_rounded : Icons.home_outlined,
+                ),
+                label: Text(
+                  canCheckStatus ? 'Consultar estado' : 'Volver al inicio',
+                ),
+                style: FilledButton.styleFrom(
+                  backgroundColor: OnboardingPalette.purple,
+                  foregroundColor: Colors.white,
+                  minimumSize: const Size(double.infinity, 52),
+                  textStyle: const TextStyle(
+                    fontFamily: 'Roboto',
+                    fontSize: 15,
+                    fontWeight: FontWeight.w700,
+                  ),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(14),
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ),
+      ),
       body: SafeArea(
-        child: Stack(
-          children: [
-            Consumer<ReportCaseViewModel>(
-              builder: (_, vm, __) {
-                final codigo = vm.generatedCodigoCaso ?? '#--';
-                return SingleChildScrollView(
+        child: LayoutBuilder(
+          builder: (context, constraints) {
+            final compact = constraints.maxHeight < 700;
+            return Center(
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 680),
+                child: SingleChildScrollView(
                   padding: EdgeInsets.fromLTRB(
-                    horizontalPadding, 14, horizontalPadding, 150,
+                    20,
+                    compact ? 12 : 20,
+                    20,
+                    compact ? 20 : 32,
                   ),
                   child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
                       Row(
                         children: [
-                          GestureDetector(
-                            onTap: () => _backToHome(context),
-                            child: Container(
-                              width: 42,
-                              height: 42,
-                              decoration: BoxDecoration(
-                                color: Colors.grey.shade200,
-                                shape: BoxShape.circle,
-                              ),
-                              child: const Icon(
-                                Icons.home_outlined,
-                                color: Colors.black87,
-                              ),
+                          const LilaWordmark(),
+                          const Spacer(),
+                          IconButton.filledTonal(
+                            tooltip: 'Volver al inicio',
+                            onPressed: () => _backToHome(context),
+                            icon: const Icon(Icons.home_outlined),
+                            style: IconButton.styleFrom(
+                              backgroundColor: OnboardingPalette.palePurple,
+                              foregroundColor: OnboardingPalette.purple,
                             ),
                           ),
                         ],
                       ),
-                      const SizedBox(height: 18),
-                      Text(
-                        'Denuncia registrada con éxito',
+                      SizedBox(height: compact ? 18 : 28),
+                      const Text(
+                        'PASO 5 DE 5 · CONFIRMACIÓN',
+                        textAlign: TextAlign.center,
                         style: TextStyle(
-                          fontSize: titleSize,
-                          fontWeight: FontWeight.w600,
-                          color: Colors.black87,
+                          color: OnboardingPalette.purple,
+                          fontSize: 12,
+                          fontWeight: FontWeight.w800,
+                          letterSpacing: 1.1,
                         ),
                       ),
-                      SizedBox(height: (h * 0.045).clamp(16.0, 34.0)),
+                      SizedBox(height: compact ? 12 : 20),
                       Center(
-                        child: Icon(
-                          Icons.verified_rounded,
-                          size: (w * 0.27).clamp(88.0, 122.0),
-                          color: Colors.black87,
-                        ),
-                      ),
-                      SizedBox(height: (h * 0.025).clamp(10.0, 22.0)),
-                      Center(
-                        child: Text(
-                          'Tu código único es:',
-                          style: TextStyle(
-                            fontSize: (w * 0.05).clamp(18.0, 24.0),
-                            fontWeight: FontWeight.w600,
-                            color: Colors.black87,
+                        child: Container(
+                          width: compact ? 76 : 92,
+                          height: compact ? 76 : 92,
+                          decoration: const BoxDecoration(
+                            color: OnboardingPalette.paleTeal,
+                            shape: BoxShape.circle,
+                          ),
+                          child: Icon(
+                            isDemo
+                                ? Icons.visibility_outlined
+                                : Icons.verified_rounded,
+                            color: OnboardingPalette.teal,
+                            size: compact ? 42 : 52,
                           ),
                         ),
                       ),
-                      const SizedBox(height: 10),
-                      _CopyableCode(code: codigo, screenWidth: w),
-                      SizedBox(height: (h * 0.03).clamp(14.0, 26.0)),
-                      _InfoCard(screenWidth: w),
-                      SizedBox(height: (h * 0.06).clamp(28.0, 60.0)),
-                      Center(
-                        child: SizedBox(
-                          width: (w * 0.5).clamp(180.0, 240.0),
-                          child: PrimaryActionButton(
-                            text: 'Ver estado',
-                            onTap: () => _openStatus(context, codigo),
-                          ),
+                      const SizedBox(height: 16),
+                      Text(
+                        isDemo ? 'Vista de demostración' : 'Reporte recibido',
+                        textAlign: TextAlign.center,
+                        style: const TextStyle(
+                          color: Color(0xFF25204F),
+                          fontSize: 27,
+                          fontWeight: FontWeight.w800,
+                          height: 1.15,
                         ),
                       ),
-                      const SizedBox(height: 12),
-                      Center(
-                        child: TextButton(
+                      const SizedBox(height: 8),
+                      Text(
+                        isDemo
+                            ? 'Este recorrido es una vista previa. El código mostrado no corresponde a un caso registrado.'
+                            : 'Guarda tu código para consultar el estado de tu reporte cuando lo necesites.',
+                        textAlign: TextAlign.center,
+                        style: reportSecondaryStyle,
+                      ),
+                      SizedBox(height: compact ? 20 : 28),
+                      _CodeCard(code: codigo, isDemo: isDemo),
+                      const SizedBox(height: 16),
+                      _InfoCard(isDemo: isDemo),
+                      if (canCheckStatus) ...[
+                        const SizedBox(height: 14),
+                        TextButton(
                           onPressed: () => _backToHome(context),
+                          style: TextButton.styleFrom(
+                            foregroundColor: OnboardingPalette.purple,
+                          ),
                           child: const Text('Finalizar y volver al inicio'),
                         ),
-                      ),
+                      ],
                     ],
                   ),
-                );
-              },
-            ),
-            const AppBottomBar(),
-            const SideChat(),
-          ],
+                ),
+              ),
+            );
+          },
         ),
       ),
     );
   }
 }
 
-class _CopyableCode extends StatelessWidget {
-  final String code;
-  final double screenWidth;
+class _CodeCard extends StatelessWidget {
+  final String? code;
+  final bool isDemo;
 
-  const _CopyableCode({required this.code, required this.screenWidth});
+  const _CodeCard({required this.code, required this.isDemo});
 
-  @override
-  Widget build(BuildContext context) {
-    return Center(
-      child: GestureDetector(
-        onTap: () async {
-          await Clipboard.setData(ClipboardData(text: code));
-          if (!context.mounted) return;
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Código copiado al portapapeles.'),
-              duration: Duration(seconds: 2),
-            ),
-          );
-        },
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Text(
-              code,
-              style: TextStyle(
-                fontSize: (screenWidth * 0.096).clamp(36.0, 52.0),
-                fontWeight: FontWeight.w800,
-                letterSpacing: 0.8,
-                color: Colors.black87,
-              ),
-            ),
-            const SizedBox(width: 8),
-            const Icon(Icons.copy_rounded, color: Colors.black87, size: 22),
-          ],
-        ),
-      ),
+  Future<void> _copy(BuildContext context) async {
+    final value = code;
+    if (value == null) return;
+    await Clipboard.setData(ClipboardData(text: value));
+    if (!context.mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('Código copiado al portapapeles.')),
     );
   }
+
+  @override
+  Widget build(BuildContext context) => Container(
+    padding: const EdgeInsets.all(20),
+    decoration: BoxDecoration(
+      color: Colors.white,
+      borderRadius: BorderRadius.circular(20),
+      border: Border.all(color: OnboardingPalette.palePurple, width: 2),
+    ),
+    child: Column(
+      children: [
+        Text(
+          isDemo ? 'CÓDIGO DE DEMOSTRACIÓN' : 'CÓDIGO DEL CASO',
+          style: const TextStyle(
+            color: OnboardingPalette.purple,
+            fontSize: 11,
+            fontWeight: FontWeight.w800,
+            letterSpacing: 1,
+          ),
+        ),
+        const SizedBox(height: 10),
+        SelectableText(
+          code ?? 'Código no disponible',
+          textAlign: TextAlign.center,
+          style: const TextStyle(
+            color: Color(0xFF25204F),
+            fontSize: 27,
+            fontWeight: FontWeight.w800,
+            letterSpacing: 0.4,
+          ),
+        ),
+        const SizedBox(height: 12),
+        OutlinedButton.icon(
+          onPressed: code == null ? null : () => _copy(context),
+          icon: const Icon(Icons.copy_rounded, size: 18),
+          label: const Text('Copiar código'),
+          style: OutlinedButton.styleFrom(
+            foregroundColor: OnboardingPalette.purple,
+            side: const BorderSide(color: OnboardingPalette.purple),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+            ),
+          ),
+        ),
+      ],
+    ),
+  );
 }
 
 class _InfoCard extends StatelessWidget {
-  final double screenWidth;
+  final bool isDemo;
 
-  const _InfoCard({required this.screenWidth});
+  const _InfoCard({required this.isDemo});
 
   @override
-  Widget build(BuildContext context) {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 18),
-      decoration: BoxDecoration(
-        color: Colors.grey.shade300,
-        borderRadius: BorderRadius.circular(28),
-      ),
-      child: Text(
-        'Guarda este código temporal. Al ser un reporte anónimo, es la única forma de consultar el progreso de tu caso.',
-        textAlign: TextAlign.center,
-        style: TextStyle(
-          fontSize: (screenWidth * 0.037).clamp(13.0, 16.0),
-          color: Colors.black87,
-          height: 1.35,
-          fontWeight: FontWeight.w500,
+  Widget build(BuildContext context) => Container(
+    padding: const EdgeInsets.all(16),
+    decoration: BoxDecoration(
+      color: OnboardingPalette.paleTeal,
+      borderRadius: BorderRadius.circular(16),
+    ),
+    child: Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Icon(Icons.lock_outline_rounded, color: OnboardingPalette.teal),
+        const SizedBox(width: 12),
+        Expanded(
+          child: Text(
+            isDemo
+                ? 'El código de demostración sirve para explorar esta pantalla y no permite consultar un caso.'
+                : 'Este código es la forma de consultar el progreso de tu reporte anónimo. Guárdalo en un lugar seguro.',
+            style: const TextStyle(
+              color: Color(0xFF22616B),
+              fontSize: 13,
+              height: 1.4,
+            ),
+          ),
         ),
-      ),
-    );
-  }
+      ],
+    ),
+  );
 }

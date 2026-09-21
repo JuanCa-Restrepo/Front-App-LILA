@@ -23,6 +23,7 @@ import 'package:mockups/presentation/views/report_case/report_case_step2_page.da
 import 'package:mockups/presentation/views/report_case/report_case_step3_page.dart';
 import 'package:mockups/presentation/views/report_case/report_case_step4_page.dart';
 import 'package:mockups/presentation/views/report_case/report_case_step5_page.dart';
+import 'package:mockups/presentation/views/report_case/report_final_page.dart';
 import 'package:mockups/presentation/widgets/app_bottom_bar.dart';
 
 class _Cases extends Fake implements CasoRepository {}
@@ -50,6 +51,21 @@ ReportCaseViewModel _report() => ReportCaseViewModel(
   driveUploader: const GoogleDriveUploaderStub(),
   authService: const AuthService(FlutterSecureStorage()),
 );
+
+class _ConfirmationReport extends ReportCaseViewModel {
+  final String code;
+
+  _ConfirmationReport(this.code)
+    : super(
+        casoRepository: _Cases(),
+        evidenciaRepository: _Evidence(),
+        driveUploader: const GoogleDriveUploaderStub(),
+        authService: const AuthService(FlutterSecureStorage()),
+      );
+
+  @override
+  String? get generatedCodigoCaso => code;
+}
 
 Widget _app(
   Widget page,
@@ -419,6 +435,90 @@ void main() {
     );
     expect(tester.widget<TextField>(field).controller!.text, 'LILA-12345');
     expect(find.byType(AppBottomBar), findsNothing);
+    expect(tester.takeException(), isNull);
+  });
+
+  for (final size in [
+    const Size(320, 568),
+    const Size(390, 844),
+    const Size(1024, 768),
+  ]) {
+    testWidgets('Confirmation keeps code and actions accessible at $size', (
+      tester,
+    ) async {
+      _size(tester, size);
+      final report = _ConfirmationReport('#AB-12345');
+      final captureKey = GlobalKey();
+      addTearDown(report.dispose);
+      await tester.pumpWidget(
+        ChangeNotifierProvider<ReportCaseViewModel>.value(
+          value: report,
+          child: MaterialApp(
+            home: RepaintBoundary(
+              key: captureKey,
+              child: const ReportFinalPage(),
+            ),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      expect(find.text('Reporte recibido'), findsOneWidget);
+      expect(find.text('#AB-12345'), findsOneWidget);
+      if (size == const Size(390, 844) &&
+          const bool.fromEnvironment('CAPTURE_CONFIRMATION')) {
+        final boundary =
+            captureKey.currentContext!.findRenderObject()!
+                as RenderRepaintBoundary;
+        await tester.runAsync(() async {
+          final screenshot = await boundary.toImage(pixelRatio: 2);
+          final bytes = await screenshot.toByteData(
+            format: ui.ImageByteFormat.png,
+          );
+          final file = File('build/report_previews/confirmation.png');
+          await file.parent.create(recursive: true);
+          await file.writeAsBytes(bytes!.buffer.asUint8List());
+          screenshot.dispose();
+        });
+      }
+      await tester.ensureVisible(find.text('Consultar estado'));
+      await tester.pumpAndSettle();
+      expect(find.text('Consultar estado').hitTestable(), findsOneWidget);
+      expect(tester.takeException(), isNull);
+    });
+  }
+
+  testWidgets('Demo confirmation is labeled and code can be copied', (
+    tester,
+  ) async {
+    _size(tester, const Size(390, 844));
+    String? copiedCode;
+    final messenger =
+        TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger;
+    messenger.setMockMethodCallHandler(SystemChannels.platform, (call) async {
+      if (call.method == 'Clipboard.setData') {
+        copiedCode = (call.arguments as Map)['text'] as String?;
+      }
+      return null;
+    });
+    addTearDown(
+      () => messenger.setMockMethodCallHandler(SystemChannels.platform, null),
+    );
+    final report = _ConfirmationReport('LILA-DEMO-12345');
+    addTearDown(report.dispose);
+    await tester.pumpWidget(
+      ChangeNotifierProvider<ReportCaseViewModel>.value(
+        value: report,
+        child: const MaterialApp(home: ReportFinalPage()),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.text('Vista de demostración'), findsOneWidget);
+    expect(find.text('Consultar estado'), findsNothing);
+    await tester.tap(find.text('Copiar código'));
+    await tester.pump();
+    expect(copiedCode, 'LILA-DEMO-12345');
     expect(tester.takeException(), isNull);
   });
 }
