@@ -191,11 +191,48 @@ class _ReportCaseStep2PageState extends State<ReportCaseStep2Page> {
                 ],
               ),
             ),
-            const AppBottomBar(),
-            const SideChat(),
-          ],
+          ),
         ),
-      ),
+      ],
+    ),
+  );
+
+  /// Mapeo visual local (sin backend) para iconos, colores y descripciones.
+  /// Retorna `(icon, color, description)`.
+  (IconData, Color, String) _situationStyle(String name) {
+    final lower = name.toLowerCase();
+    if (lower.contains('verbal')) {
+      return (
+        Icons.record_voice_over_rounded,
+        OnboardingPalette.purple,
+        'Insultos, burlas, amenazas o comentarios que te hacen sentir mal.'
+      );
+    }
+    if (lower.contains('físico') || lower.contains('fisico')) {
+      return (
+        Icons.personal_injury_outlined,
+        const Color(0xFFD94755),
+        'Empujones, golpes o cualquier contacto que te lastime o asuste.'
+      );
+    }
+    if (lower.contains('sexual')) {
+      return (
+        Icons.block_rounded,
+        const Color(0xFFB92F43),
+        'Comentarios, gestos o contactos de tipo sexual que no consentiste.'
+      );
+    }
+    if (lower.contains('digital')) {
+      return (
+        Icons.smartphone_rounded,
+        OnboardingPalette.teal,
+        'Mensajes, fotos o publicaciones en redes que te acosan o exponen.'
+      );
+    }
+    return (
+      Icons.help_outline_rounded,
+      OnboardingPalette.teal,
+      'Selecciona la opción más cercana y detalla lo ocurrido en la descripción.'
     );
   }
 }

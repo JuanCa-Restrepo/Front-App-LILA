@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../../viewmodels/report_case_viewmodel.dart';
+import '../../viewmodels/tipo_acoso_viewmodel.dart';
 import '../onboarding/onboarding_style.dart';
 import 'report_case_step2_page.dart';
 import 'report_step_layout.dart';
@@ -20,6 +21,11 @@ class _ReportCaseStep1PageState extends State<ReportCaseStep1Page> {
   @override
   void initState() {
     super.initState();
+    // Inicia la carga después del primer frame para no notificar a Provider
+    // mientras Flutter todavía construye esta pantalla.
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) context.read<TipoAcosoViewModel>().load();
+    });
     _orientationController = TextEditingController(
       text: context.read<ReportCaseViewModel>().orientacionGenero ?? '',
     );

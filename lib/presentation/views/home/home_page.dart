@@ -75,16 +75,19 @@ class _HomePageState extends State<HomePage> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: OnboardingPalette.background,
-      bottomNavigationBar: const AppBottomBar.embedded(),
+      bottomNavigationBar: MediaQuery.viewInsetsOf(context).bottom > 0
+          ? null
+          : const AppBottomBar.embedded(),
       body: SafeArea(
         child: Stack(
           children: [
             const Positioned.fill(child: _HomeBackground()),
             LayoutBuilder(
               builder: (context, constraints) {
+                final screenSize = MediaQuery.sizeOf(context);
                 final useWideLayout =
-                    constraints.maxWidth >= 700 ||
-                    constraints.maxWidth > constraints.maxHeight;
+                    screenSize.width >= 700 ||
+                    screenSize.width > screenSize.height;
                 if (useWideLayout) {
                   return _WideHomeLayout(
                     trackingCodeController: _trackingCodeController,

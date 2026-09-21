@@ -29,27 +29,42 @@ class AuthViewModel extends BaseViewModel {
   bool get isReady => _userId != null;
 
   /// Ejecuta el flujo de inicialización. Llamar al arrancar la app.
+  /// Modo visual/demo: si no hay backend, genera un id local y continúa.
   Future<bool> initialize() async {
-    final result = await guard<String>(() async {
+    try {
       final cached = await _authService.getUserId();
       if (cached != null && cached.isNotEmpty) {
-        return cached;
+        _userId = cached;
+        notifyListeners();
+        return true;
       }
 
-      final deviceId = await _deviceService.getOrCreateDeviceId();
-      final usuario = await _usuarioRepository.registerWithDevice(
-        deviceId: deviceId,
-      );
-      await _authService.saveUserId(usuario.idUsuario);
-      return usuario.idUsuario;
-    });
-
-    if (result != null) {
-      _userId = result;
-      notifyListeners();
-      return true;
+      try {
+        final deviceId = await _deviceService.getOrCreateDeviceId();
+        final usuario = await _usuarioRepository.registerWithDevice(
+          deviceId: deviceId,
+        );
+        await _authService.saveUserId(usuario.idUsuario);
+        _userId = usuario.idUsuario;
+        notifyListeners();
+        return true;
+      } catch (_) {
+        // Sin backend: sesión demo local para navegar las vistas.
+        final demoId =
+            'demo-${DateTime.now().millisecondsSinceEpoch}';
+        try {
+          await _authService.saveUserId(demoId);
+        } catch (_) {
+          // secure_storage puede fallar en algunas plataformas; igual seguimos.
+        }
+        _userId = demoId;
+        clearError();
+        notifyListeners();
+        return true;
+      }
+    } catch (_) {
+      return false;
     }
-    return false;
   }
 
   /// Borra el `idUsuario` cacheado. Útil para QA — fuerza un re-registro

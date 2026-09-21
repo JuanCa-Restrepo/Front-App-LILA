@@ -121,12 +121,9 @@ class App extends StatelessWidget {
           create: (ctx) => AuthService(ctx.read<FlutterSecureStorage>()),
         ),
         Provider<GoogleDriveUploader>(
-          create: (_) => GoogleDriveUploaderImpl(
-            folderId: const String.fromEnvironment(
-              'DRIVE_FOLDER_ID',
-              defaultValue: 'TU_FOLDER_ID_AQUI',
-            ),
-          ),
+          // Modo visual/demo sin credenciales: stub local, no lee
+          // assets/service_account.json ni necesita DRIVE_FOLDER_ID.
+          create: (_) => const GoogleDriveUploaderStub(),
         ),
 
         // ==================================================

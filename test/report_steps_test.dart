@@ -9,12 +9,15 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:provider/provider.dart';
 import 'package:mockups/core/services/auth_service.dart';
 import 'package:mockups/core/services/google_drive_uploader.dart';
-import 'package:mockups/domain/entities/tipo_acoso.dart';
+import 'package:mockups/data/models/tipo_acoso_model.dart';
 import 'package:mockups/domain/repositories/caso_repository.dart';
 import 'package:mockups/domain/repositories/evidencia_repository.dart';
+import 'package:mockups/domain/repositories/responsable_repository.dart';
 import 'package:mockups/domain/repositories/tipo_acoso_repository.dart';
+import 'package:mockups/presentation/viewmodels/case_status_viewmodel.dart';
 import 'package:mockups/presentation/viewmodels/report_case_viewmodel.dart';
 import 'package:mockups/presentation/viewmodels/tipo_acoso_viewmodel.dart';
+import 'package:mockups/presentation/views/home/home_page.dart';
 import 'package:mockups/presentation/views/report_case/report_case_step1_page.dart';
 import 'package:mockups/presentation/views/report_case/report_case_step2_page.dart';
 import 'package:mockups/presentation/views/report_case/report_case_step3_page.dart';
@@ -26,16 +29,18 @@ class _Cases extends Fake implements CasoRepository {}
 
 class _Evidence extends Fake implements EvidenciaRepository {}
 
+class _Responsibles extends Fake implements ResponsableRepository {}
+
 class _Catalog implements TipoAcosoRepository {
-  Future<List<TipoAcoso>> Function()? fetch;
+  Future<List<TipoAcosoModel>> Function()? fetch;
   @override
-  Future<List<TipoAcoso>> fetchAll() async => fetch != null
+  Future<List<TipoAcosoModel>> fetchAll() async => fetch != null
       ? fetch!()
       : const [
-          TipoAcoso(idTipoAcoso: 21, descripcion: 'Acoso verbal'),
-          TipoAcoso(idTipoAcoso: 35, descripcion: 'Acoso físico'),
-          TipoAcoso(idTipoAcoso: 48, descripcion: 'Acoso sexual'),
-          TipoAcoso(idTipoAcoso: 92, descripcion: 'Acoso digital'),
+          TipoAcosoModel(idTipoAcoso: 21, descripcion: 'Acoso verbal'),
+          TipoAcosoModel(idTipoAcoso: 35, descripcion: 'Acoso físico'),
+          TipoAcosoModel(idTipoAcoso: 48, descripcion: 'Acoso sexual'),
+          TipoAcosoModel(idTipoAcoso: 92, descripcion: 'Acoso digital'),
         ];
 }
 
@@ -181,7 +186,7 @@ void main() {
     'Catalog loading, retry, empty response and orientation guide work',
     (tester) async {
       _size(tester, const Size(390, 844));
-      final pending = Completer<List<TipoAcoso>>();
+      final pending = Completer<List<TipoAcosoModel>>();
       final repo = _Catalog()..fetch = () => pending.future;
       final catalog = TipoAcosoViewModel(repo);
       final report = _report();
@@ -305,6 +310,115 @@ void main() {
     await tester.ensureVisible(find.text('Volver'));
     await tester.pumpAndSettle();
     expect(find.text('Continuar').hitTestable(), findsOneWidget);
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('Profile field keeps focus and text while keyboard is open', (
+    tester,
+  ) async {
+    _size(tester, const Size(390, 844));
+    final report = _report();
+    final catalog = TipoAcosoViewModel(_Catalog());
+    addTearDown(report.dispose);
+    addTearDown(catalog.dispose);
+    await tester.pumpWidget(_app(const ReportCaseStep1Page(), report, catalog));
+    await tester.pumpAndSettle();
+
+    final field = find.byType(TextField);
+    await tester.ensureVisible(field);
+    await tester.pumpAndSettle();
+    await tester.tap(field);
+    tester.view.viewInsets = const FakeViewPadding(bottom: 300);
+    addTearDown(tester.view.resetViewInsets);
+    await tester.pumpAndSettle();
+    await tester.enterText(field, 'Bise');
+    await tester.enterText(field, 'Bisexual');
+    await tester.pumpAndSettle();
+
+    expect(
+      tester.widget<EditableText>(find.byType(EditableText)).focusNode.hasFocus,
+      isTrue,
+    );
+    expect(tester.widget<TextField>(field).controller!.text, 'Bisexual');
+    expect(report.orientacionGenero, 'Bisexual');
+    expect(find.byType(AppBottomBar), findsNothing);
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('Description field keeps its size and focus while typing', (
+    tester,
+  ) async {
+    _size(tester, const Size(390, 844));
+    final report = _report();
+    final catalog = TipoAcosoViewModel(_Catalog());
+    addTearDown(report.dispose);
+    addTearDown(catalog.dispose);
+    await tester.pumpWidget(_app(const ReportCaseStep4Page(), report, catalog));
+    await tester.pumpAndSettle();
+    final field = find.byType(TextField);
+    final initialLines = tester.widget<TextField>(field).maxLines;
+
+    await tester.ensureVisible(field);
+    await tester.pumpAndSettle();
+    await tester.tap(field);
+    tester.view.viewInsets = const FakeViewPadding(bottom: 300);
+    addTearDown(tester.view.resetViewInsets);
+    await tester.pumpAndSettle();
+    await tester.enterText(field, 'Primer texto');
+    await tester.enterText(field, 'Descripción ampliada sin perder el foco.');
+    await tester.pumpAndSettle();
+
+    expect(tester.widget<TextField>(field).maxLines, initialLines);
+    expect(
+      tester.widget<EditableText>(find.byType(EditableText)).focusNode.hasFocus,
+      isTrue,
+    );
+    expect(report.descripcion, 'Descripción ampliada sin perder el foco.');
+    expect(find.byType(AppBottomBar), findsNothing);
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('Home tracking field stays mounted when keyboard opens', (
+    tester,
+  ) async {
+    _size(tester, const Size(390, 844));
+    final report = _report();
+    final status = CaseStatusViewModel(
+      casoRepository: _Cases(),
+      responsableRepository: _Responsibles(),
+      evidenciaRepository: _Evidence(),
+    );
+    addTearDown(report.dispose);
+    addTearDown(status.dispose);
+    await tester.pumpWidget(
+      MultiProvider(
+        providers: [
+          ChangeNotifierProvider.value(value: report),
+          ChangeNotifierProvider.value(value: status),
+        ],
+        child: const MaterialApp(home: HomePage()),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    final field = find.byType(TextField);
+    await tester.ensureVisible(field);
+    await tester.pumpAndSettle();
+    final fieldElement = tester.element(field);
+    await tester.tap(field);
+    tester.view.viewInsets = const FakeViewPadding(bottom: 300);
+    addTearDown(tester.view.resetViewInsets);
+    await tester.pumpAndSettle();
+    await tester.enterText(field, 'LILA-12345');
+    await tester.pumpAndSettle();
+
+    expect(tester.element(field), same(fieldElement));
+    expect(
+      tester.widget<EditableText>(find.byType(EditableText)).focusNode.hasFocus,
+      isTrue,
+    );
+    expect(tester.widget<TextField>(field).controller!.text, 'LILA-12345');
+    expect(find.byType(AppBottomBar), findsNothing);
     expect(tester.takeException(), isNull);
   });
 }

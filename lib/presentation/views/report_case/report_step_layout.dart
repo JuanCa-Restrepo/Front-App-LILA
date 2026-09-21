@@ -30,12 +30,16 @@ class ReportStepLayout extends StatelessWidget {
   @override
   Widget build(BuildContext context) => Scaffold(
     backgroundColor: OnboardingPalette.background,
-    bottomNavigationBar: const AppBottomBar.embedded(),
+    bottomNavigationBar: MediaQuery.viewInsetsOf(context).bottom > 0
+        ? null
+        : const AppBottomBar.embedded(),
     body: SafeArea(
       child: LayoutBuilder(
         builder: (context, constraints) {
           final wide = constraints.maxWidth >= 700;
-          final compact = constraints.maxHeight < 670;
+          // La altura disponible cambia al abrir el teclado. Mantener el
+          // tamaño del formulario estable evita relayouts del campo activo.
+          final compact = MediaQuery.sizeOf(context).height < 670;
           final intro = Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [

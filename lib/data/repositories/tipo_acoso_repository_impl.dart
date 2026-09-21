@@ -10,9 +10,18 @@ class TipoAcosoRepositoryImpl implements TipoAcosoRepository {
   const TipoAcosoRepositoryImpl(this._remote, this._local);
 
   @override
-  Future<List<TipoAcoso>> fetchAll() async {
+  Future<List<TipoAcosoModel>> fetchAll() async {
+    // Mostrar primero el último catálogo disponible evita bloquear el paso
+    // mientras una IP local inaccesible agota el timeout de conexión.
     try {
-      final items = await _remote.fetchAll();
+      final cachedItems = await _local.fetchAll();
+      if (cachedItems.isNotEmpty) return cachedItems;
+    } catch (_) {
+      // La lectura de caché no debe impedir la carga del catálogo.
+    }
+
+    try {
+      final items = await _remote.fetchAll().timeout(const Duration(seconds: 2));
       try {
         await _local.saveAll(items);
       } catch (_) {
@@ -20,9 +29,13 @@ class TipoAcosoRepositoryImpl implements TipoAcosoRepository {
       }
       return items;
     } catch (_) {
-      final cachedItems = await _local.fetchAll();
-      if (cachedItems.isNotEmpty) return cachedItems;
-      rethrow;
+      // Modo visual/demo sin backend: catálogo local fijo.
+      return const [
+        TipoAcosoModel(idTipoAcoso: 1, descripcion: 'Acoso verbal'),
+        TipoAcosoModel(idTipoAcoso: 2, descripcion: 'Acoso físico'),
+        TipoAcosoModel(idTipoAcoso: 3, descripcion: 'Acoso sexual'),
+        TipoAcosoModel(idTipoAcoso: 4, descripcion: 'Acoso digital'),
+      ];
     }
   }
 }

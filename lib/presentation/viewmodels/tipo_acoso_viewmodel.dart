@@ -17,6 +17,7 @@ class TipoAcosoViewModel extends BaseViewModel {
   bool get isLoaded => _items.isNotEmpty;
 
   Future<void> load({bool force = false}) async {
+    if (isLoading) return;
     if (isLoaded && !force) return;
     final result = await guard<List<TipoAcosoModel>>(() {
       return _repository.fetchAll();
