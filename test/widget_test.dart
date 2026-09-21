@@ -1,6 +1,4 @@
-// Smoke test mínimo: solo verificamos que la `App` raíz monte sin
-// excepciones. Los flujos completos requieren mockear `ApiClient` y
-// `FlutterSecureStorage`, lo cual queda fuera del alcance de este test.
+// En modo demo, la primera vista debe estar disponible sin registro remoto.
 
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -9,10 +7,15 @@ import 'package:mockups/app/app.dart';
 import 'package:mockups/presentation/views/onboarding/onboarding_page.dart';
 
 void main() {
-  testWidgets('La App raíz monta sin errores', (WidgetTester tester) async {
+  testWidgets('La App abre Bienvenida sin esperar autenticación', (
+    WidgetTester tester,
+  ) async {
     await tester.pumpWidget(const App());
-    // Si llegamos aquí, el árbol de Providers se construyó correctamente.
+    await tester.pump();
     expect(find.byType(App), findsOneWidget);
+    expect(find.byType(OnboardingPage), findsOneWidget);
+    expect(find.text('BIENVENIDXS'), findsOneWidget);
+    expect(find.byType(CircularProgressIndicator), findsNothing);
   });
 
   testWidgets('Continuar abre el segundo onboarding', (

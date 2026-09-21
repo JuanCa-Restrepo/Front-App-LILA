@@ -28,6 +28,7 @@ import '../presentation/viewmodels/evidencia_viewmodel.dart';
 import '../presentation/viewmodels/report_case_viewmodel.dart';
 import '../presentation/viewmodels/tipo_acoso_viewmodel.dart';
 import '../presentation/views/splash/splash_page.dart';
+import '../presentation/views/onboarding/onboarding_page.dart';
 
 /// Raíz de la aplicación.
 ///
@@ -44,6 +45,13 @@ import '../presentation/views/splash/splash_page.dart';
 class App extends StatelessWidget {
   const App({super.key});
 
+  /// La compilación visual abre la interfaz sin esperar el registro remoto.
+  /// Pasar --dart-define=LILA_DEMO_MODE=false para usar el flujo con backend.
+  static const bool demoMode = bool.fromEnvironment(
+    'LILA_DEMO_MODE',
+    defaultValue: true,
+  );
+
   @override
   Widget build(BuildContext context) {
     return MultiProvider(
@@ -54,9 +62,7 @@ class App extends StatelessWidget {
         Provider<FlutterSecureStorage>(
           create: (_) => const FlutterSecureStorage(),
         ),
-        Provider<ApiClient>(
-          create: (_) => ApiClient.create(),
-        ),
+        Provider<ApiClient>(create: (_) => ApiClient.create()),
 
         // ==================================================
         // 2) Datasources
@@ -71,8 +77,7 @@ class App extends StatelessWidget {
           create: (_) => const TipoAcosoLocalDatasource(),
         ),
         Provider<ResponsableRemoteDatasource>(
-          create: (ctx) =>
-              ResponsableRemoteDatasource(ctx.read<ApiClient>()),
+          create: (ctx) => ResponsableRemoteDatasource(ctx.read<ApiClient>()),
         ),
         Provider<CasoRemoteDatasource>(
           create: (ctx) => CasoRemoteDatasource(ctx.read<ApiClient>()),
@@ -85,9 +90,8 @@ class App extends StatelessWidget {
         // 3) Repositorios — expuestos como interface
         // ==================================================
         Provider<UsuarioRepository>(
-          create: (ctx) => UsuarioRepositoryImpl(
-            ctx.read<UsuarioRemoteDatasource>(),
-          ),
+          create: (ctx) =>
+              UsuarioRepositoryImpl(ctx.read<UsuarioRemoteDatasource>()),
         ),
         Provider<TipoAcosoRepository>(
           create: (ctx) => TipoAcosoRepositoryImpl(
@@ -101,14 +105,11 @@ class App extends StatelessWidget {
           ),
         ),
         Provider<CasoRepository>(
-          create: (ctx) => CasoRepositoryImpl(
-            ctx.read<CasoRemoteDatasource>(),
-          ),
+          create: (ctx) => CasoRepositoryImpl(ctx.read<CasoRemoteDatasource>()),
         ),
         Provider<EvidenciaRepository>(
-          create: (ctx) => EvidenciaRepositoryImpl(
-            ctx.read<EvidenciaRemoteDatasource>(),
-          ),
+          create: (ctx) =>
+              EvidenciaRepositoryImpl(ctx.read<EvidenciaRemoteDatasource>()),
         ),
 
         // ==================================================
@@ -137,9 +138,7 @@ class App extends StatelessWidget {
           ),
         ),
         ChangeNotifierProvider(
-          create: (ctx) => TipoAcosoViewModel(
-            ctx.read<TipoAcosoRepository>(),
-          ),
+          create: (ctx) => TipoAcosoViewModel(ctx.read<TipoAcosoRepository>()),
         ),
         ChangeNotifierProvider(
           create: (ctx) => ReportCaseViewModel(
@@ -147,7 +146,7 @@ class App extends StatelessWidget {
             evidenciaRepository: ctx.read<EvidenciaRepository>(),
             driveUploader: ctx.read<GoogleDriveUploader>(),
             authService: ctx.read<AuthService>(),
-            demoMode: true,
+            demoMode: demoMode,
           ),
         ),
         ChangeNotifierProvider(
@@ -172,7 +171,7 @@ class App extends StatelessWidget {
           useMaterial3: true,
           scaffoldBackgroundColor: const Color(0xFFF5F5F5),
         ),
-        home: const SplashPage(),
+        home: demoMode ? const OnboardingPage() : const SplashPage(),
       ),
     );
   }
