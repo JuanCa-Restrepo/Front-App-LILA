@@ -62,7 +62,9 @@ class _ReportCaseStep1PageState extends State<ReportCaseStep1Page> {
     step: 1,
     section: 'Perfil',
     title: 'Cuéntanos sobre la persona afectada',
-    subtitle: 'Esta información nos ayuda a orientar mejor el caso.',
+    subtitle: context.watch<ReportCaseViewModel>().isWitness
+        ? 'Comparte lo que sabes de la persona afectada. No son tus datos.'
+        : 'Esta información nos ayuda a orientar mejor el caso.',
     onNext: _goNext,
     onHelp: _showHelp,
     contentBuilder: (compact) => Consumer<ReportCaseViewModel>(
@@ -132,7 +134,7 @@ class _ReportCaseStep1PageState extends State<ReportCaseStep1Page> {
             ),
           ),
           const SizedBox(height: 14),
-          const _PrivacyNote(),
+          _PrivacyNote(isWitness: vm.isWitness),
         ],
       ),
     ),
@@ -250,7 +252,8 @@ InputDecoration _fieldDecoration({
 );
 
 class _PrivacyNote extends StatelessWidget {
-  const _PrivacyNote();
+  final bool isWitness;
+  const _PrivacyNote({required this.isWitness});
 
   @override
   Widget build(BuildContext context) => Container(
@@ -259,14 +262,16 @@ class _PrivacyNote extends StatelessWidget {
       color: OnboardingPalette.paleTeal,
       borderRadius: BorderRadius.circular(14),
     ),
-    child: const Row(
+    child: Row(
       children: [
-        Icon(Icons.lock_outline_rounded, color: OnboardingPalette.teal),
-        SizedBox(width: 10),
+        const Icon(Icons.lock_outline_rounded, color: OnboardingPalette.teal),
+        const SizedBox(width: 10),
         Expanded(
           child: Text(
-            'Tu información estará protegida durante todo el proceso.',
-            style: TextStyle(
+            isWitness
+                ? 'Comparte solo los datos de la persona afectada que conozcas.'
+                : 'Tu información estará protegida durante todo el proceso.',
+            style: const TextStyle(
               color: Color(0xFF22616B),
               fontSize: 12,
               height: 1.4,

@@ -40,7 +40,9 @@ class ReportFinalPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final codigo = context.watch<ReportCaseViewModel>().generatedCodigoCaso;
+    final report = context.watch<ReportCaseViewModel>();
+    final codigo = report.generatedCodigoCaso;
+    final isWitness = report.isWitness;
     final isDemo = codigo?.startsWith('LILA-DEMO-') ?? false;
     final canCheckStatus = codigo != null && !isDemo;
 
@@ -115,10 +117,12 @@ class ReportFinalPage extends StatelessWidget {
                         ],
                       ),
                       SizedBox(height: compact ? 18 : 28),
-                      const Text(
-                        'PASO 5 DE 5 · CONFIRMACIÓN',
+                      Text(
+                        isWitness
+                            ? 'TESTIGO · CONFIRMACIÓN'
+                            : 'PASO 5 DE 5 · CONFIRMACIÓN',
                         textAlign: TextAlign.center,
-                        style: TextStyle(
+                        style: const TextStyle(
                           color: OnboardingPalette.purple,
                           fontSize: 12,
                           fontWeight: FontWeight.w800,
@@ -145,7 +149,11 @@ class ReportFinalPage extends StatelessWidget {
                       ),
                       const SizedBox(height: 16),
                       Text(
-                        isDemo ? 'Vista de demostración' : 'Reporte recibido',
+                        isWitness
+                            ? 'Vista de testigo'
+                            : isDemo
+                            ? 'Vista de demostración'
+                            : 'Reporte recibido',
                         textAlign: TextAlign.center,
                         style: const TextStyle(
                           color: Color(0xFF25204F),
@@ -156,7 +164,9 @@ class ReportFinalPage extends StatelessWidget {
                       ),
                       const SizedBox(height: 8),
                       Text(
-                        isDemo
+                        isWitness
+                            ? 'Este recorrido muestra cómo reportar como testigo. No se ha registrado un caso y el código es de demostración.'
+                            : isDemo
                             ? 'Este recorrido es una vista previa. El código mostrado no corresponde a un caso registrado.'
                             : 'Guarda tu código para consultar el estado de tu reporte cuando lo necesites.',
                         textAlign: TextAlign.center,

@@ -57,8 +57,8 @@ class _HomePageState extends State<HomePage> {
     context,
   ).showSnackBar(SnackBar(content: Text(message)));
 
-  void _openReportFlow() {
-    context.read<ReportCaseViewModel>().reset();
+  void _openReportFlow(ReportRole role) {
+    context.read<ReportCaseViewModel>().start(role);
     Navigator.push(
       context,
       MaterialPageRoute(builder: (_) => const ReportCaseStep1Page()),
@@ -97,7 +97,8 @@ class _HomePageState extends State<HomePage> {
                         setState(() => _panicProgress = value),
                     onPanicComplete: _triggerEmergency,
                     onMenuSelected: _showSnack,
-                    onOpenReport: _openReportFlow,
+                    onOpenReport: () => _openReportFlow(ReportRole.victim),
+                    onOpenWitness: () => _openReportFlow(ReportRole.witness),
                     onCheckStatus: _onCheckStatus,
                   );
                 }
@@ -147,7 +148,7 @@ class _HomePageState extends State<HomePage> {
                               surface: OnboardingPalette.palePurple,
                               title: 'Soy víctima',
                               description: 'Reportar un caso',
-                              onTap: _openReportFlow,
+                              onTap: () => _openReportFlow(ReportRole.victim),
                             ),
                           ),
                           const SizedBox(width: 10),
@@ -158,7 +159,7 @@ class _HomePageState extends State<HomePage> {
                               surface: OnboardingPalette.paleTeal,
                               title: 'Soy testigo',
                               description: 'Reportar una situación',
-                              onTap: () {},
+                              onTap: () => _openReportFlow(ReportRole.witness),
                             ),
                           ),
                         ],
@@ -195,6 +196,7 @@ class _WideHomeLayout extends StatelessWidget {
   final VoidCallback onPanicComplete;
   final ValueChanged<String> onMenuSelected;
   final VoidCallback onOpenReport;
+  final VoidCallback onOpenWitness;
   final VoidCallback onCheckStatus;
 
   const _WideHomeLayout({
@@ -204,6 +206,7 @@ class _WideHomeLayout extends StatelessWidget {
     required this.onPanicComplete,
     required this.onMenuSelected,
     required this.onOpenReport,
+    required this.onOpenWitness,
     required this.onCheckStatus,
   });
 
@@ -274,7 +277,7 @@ class _WideHomeLayout extends StatelessWidget {
                   surface: OnboardingPalette.paleTeal,
                   title: 'Soy testigo',
                   description: 'Reportar una situación que presencié',
-                  onTap: () {},
+                  onTap: onOpenWitness,
                 ),
                 const SizedBox(height: 16),
                 const _SectionTitle(

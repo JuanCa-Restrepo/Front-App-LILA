@@ -46,9 +46,12 @@ class ReportCaseStep5Page extends StatelessWidget {
     builder: (context, vm, _) => ReportStepLayout(
       step: 5,
       section: 'Evidencias',
-      title: 'Agrega tus evidencias',
-      subtitle:
-          'Puedes adjuntar imágenes que respalden tu reporte. Este paso es opcional.',
+      title: vm.isWitness
+          ? 'Agrega evidencias de la situación'
+          : 'Agrega tus evidencias',
+      subtitle: vm.isWitness
+          ? 'Puedes adjuntar imágenes de la situación. Este paso es opcional.'
+          : 'Puedes adjuntar imágenes que respalden tu reporte. Este paso es opcional.',
       actionLabel: 'Enviar reporte',
       actionLoading: vm.isLoading,
       onNext: () => _submit(context),

@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import '../../viewmodels/report_case_viewmodel.dart';
 import '../../widgets/app_bottom_bar.dart';
 import '../onboarding/onboarding_style.dart';
 
@@ -36,6 +38,10 @@ class ReportStepLayout extends StatelessWidget {
     body: SafeArea(
       child: LayoutBuilder(
         builder: (context, constraints) {
+          final isWitness = context.watch<ReportCaseViewModel>().isWitness;
+          final accent = isWitness
+              ? OnboardingPalette.teal
+              : OnboardingPalette.purple;
           final wide = constraints.maxWidth >= 700;
           // La altura disponible cambia al abrir el teclado. Mantener el
           // tamaño del formulario estable evita relayouts del campo activo.
@@ -88,13 +94,15 @@ class ReportStepLayout extends StatelessWidget {
                                   Icons.arrow_back_ios_new_rounded,
                                   size: 20,
                                 ),
-                                color: OnboardingPalette.purple,
+                                color: accent,
                               ),
-                              const Expanded(
+                              Expanded(
                                 child: Text(
-                                  'Nuevo reporte',
+                                  isWitness
+                                      ? 'Reporte como testigo'
+                                      : 'Nuevo reporte',
                                   textAlign: TextAlign.center,
-                                  style: TextStyle(
+                                  style: const TextStyle(
                                     color: Color(0xFF25204F),
                                     fontWeight: FontWeight.w700,
                                   ),
@@ -104,7 +112,7 @@ class ReportStepLayout extends StatelessWidget {
                                 tooltip: 'Ayuda para reportar',
                                 onPressed: onHelp,
                                 icon: const Icon(Icons.help_outline_rounded),
-                                color: OnboardingPalette.purple,
+                                color: accent,
                               ),
                             ],
                           ),
@@ -127,7 +135,7 @@ class ReportStepLayout extends StatelessWidget {
                                             child: Container(
                                               height: 3,
                                               color: index <= step
-                                                  ? OnboardingPalette.purple
+                                                  ? accent
                                                   : OnboardingPalette
                                                         .palePurple,
                                             ),
@@ -138,7 +146,7 @@ class ReportStepLayout extends StatelessWidget {
                                           decoration: BoxDecoration(
                                             shape: BoxShape.circle,
                                             color: index <= step
-                                                ? OnboardingPalette.purple
+                                                ? accent
                                                 : OnboardingPalette.palePurple,
                                             border: index == step
                                                 ? Border.all(
@@ -154,8 +162,8 @@ class ReportStepLayout extends StatelessWidget {
                                   const SizedBox(height: 12),
                                   Text(
                                     'Paso $step de 5 · $section',
-                                    style: const TextStyle(
-                                      color: OnboardingPalette.purple,
+                                    style: TextStyle(
+                                      color: accent,
                                       fontSize: 12,
                                       fontWeight: FontWeight.w600,
                                     ),
@@ -186,7 +194,7 @@ class ReportStepLayout extends StatelessWidget {
                           FilledButton(
                             onPressed: actionLoading ? null : onNext,
                             style: FilledButton.styleFrom(
-                              backgroundColor: OnboardingPalette.purple,
+                              backgroundColor: accent,
                               foregroundColor: Colors.white,
                               minimumSize: const Size.fromHeight(48),
                               shape: RoundedRectangleBorder(
@@ -215,7 +223,7 @@ class ReportStepLayout extends StatelessWidget {
                           TextButton(
                             onPressed: () => Navigator.maybePop(context),
                             style: TextButton.styleFrom(
-                              foregroundColor: OnboardingPalette.purple,
+                              foregroundColor: accent,
                             ),
                             child: const Text('Volver'),
                           ),

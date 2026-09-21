@@ -47,8 +47,12 @@ class _ReportCaseStep4PageState extends State<ReportCaseStep4Page> {
   Widget build(BuildContext context) => ReportStepLayout(
     step: 4,
     section: 'Descripción',
-    title: 'Te escuchamos',
-    subtitle: 'Cuéntanos lo que pasó con tus propias palabras.',
+    title: context.watch<ReportCaseViewModel>().isWitness
+        ? 'Cuéntanos lo que viste'
+        : 'Te escuchamos',
+    subtitle: context.watch<ReportCaseViewModel>().isWitness
+        ? 'Describe lo que presenciaste con tus propias palabras.'
+        : 'Cuéntanos lo que pasó con tus propias palabras.',
     onNext: _goNext,
     onHelp: () => showReportHelp(
       context,
@@ -87,7 +91,9 @@ class _ReportCaseStep4PageState extends State<ReportCaseStep4Page> {
               color: OnboardingPalette.purple,
               fontWeight: FontWeight.w600,
             ),
-            hintText: 'Puedes contar qué ocurrió, cuándo y dónde.',
+            hintText: context.read<ReportCaseViewModel>().isWitness
+                ? 'Cuenta qué viste, cuándo y dónde ocurrió.'
+                : 'Puedes contar qué ocurrió, cuándo y dónde.',
             hintStyle: reportSecondaryStyle,
             filled: true,
             fillColor: Colors.white,

@@ -23,6 +23,8 @@ enum AffectedPersonType {
   }
 }
 
+enum ReportRole { victim, witness }
+
 /// Archivo seleccionado por el usuario en el Step 5, listo para subir.
 class EvidenceDraft {
   final String localPath;
@@ -47,6 +49,10 @@ class ReportCaseViewModel extends BaseViewModel {
   final GoogleDriveUploader _driveUploader;
   final AuthService _authService;
   final bool _demoMode;
+  ReportRole _role = ReportRole.victim;
+
+  ReportRole get role => _role;
+  bool get isWitness => _role == ReportRole.witness;
 
   ReportCaseViewModel({
     required CasoRepository casoRepository,
@@ -155,7 +161,7 @@ class ReportCaseViewModel extends BaseViewModel {
 
     // El flujo visual no necesita esperar una conexión que no está disponible.
     // La pantalla final identifica este código como demostración.
-    if (_demoMode) {
+    if (_demoMode || isWitness) {
       _generatedCodigoCaso =
           'LILA-DEMO-${DateTime.now().millisecondsSinceEpoch % 100000}';
       clearError();
@@ -208,7 +214,8 @@ class ReportCaseViewModel extends BaseViewModel {
   }
 
   /// Limpia todo el estado para iniciar un nuevo reporte.
-  void reset() {
+  void reset({ReportRole role = ReportRole.victim}) {
+    _role = role;
     _personType = AffectedPersonType.adolescente;
     _sexoBiologico = null;
     _orientacionGenero = null;
@@ -220,4 +227,7 @@ class ReportCaseViewModel extends BaseViewModel {
     clearError();
     notifyListeners();
   }
+
+  /// Inicia un borrador nuevo y conserva la procedencia del reporte.
+  void start(ReportRole role) => reset(role: role);
 }

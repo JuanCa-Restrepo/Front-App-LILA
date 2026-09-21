@@ -65,7 +65,13 @@ class _ReportCaseStep2PageState extends State<ReportCaseStep2Page> {
             ),
           ),
           const SizedBox(height: 4),
-          Text(_situationStyle(name).$3, style: reportSecondaryStyle),
+          Text(
+            _situationStyle(
+              name,
+              witness: context.read<ReportCaseViewModel>().isWitness,
+            ).$3,
+            style: reportSecondaryStyle,
+          ),
         ],
         const SizedBox(height: 16),
         const Text(
@@ -79,7 +85,9 @@ class _ReportCaseStep2PageState extends State<ReportCaseStep2Page> {
   Widget build(BuildContext context) => ReportStepLayout(
     step: 2,
     section: 'Situación',
-    title: '¿Qué está pasando?',
+    title: context.watch<ReportCaseViewModel>().isWitness
+        ? '¿Qué situación presenciaste?'
+        : '¿Qué está pasando?',
     subtitle: 'Selecciona la opción que mejor describa la situación.',
     onNext: _goNext,
     onHelp: _showGuide,
@@ -133,6 +141,7 @@ class _ReportCaseStep2PageState extends State<ReportCaseStep2Page> {
                     title: catalog.items[i].descripcion,
                     description: _situationStyle(
                       catalog.items[i].descripcion,
+                      witness: report.isWitness,
                     ).$3,
                     icon: _situationStyle(catalog.items[i].descripcion).$1,
                     color: _situationStyle(catalog.items[i].descripcion).$2,
@@ -199,40 +208,51 @@ class _ReportCaseStep2PageState extends State<ReportCaseStep2Page> {
 
   /// Mapeo visual local (sin backend) para iconos, colores y descripciones.
   /// Retorna `(icon, color, description)`.
-  (IconData, Color, String) _situationStyle(String name) {
+  (IconData, Color, String) _situationStyle(
+    String name, {
+    bool witness = false,
+  }) {
     final lower = name.toLowerCase();
     if (lower.contains('verbal')) {
       return (
         Icons.record_voice_over_rounded,
         OnboardingPalette.purple,
-        'Insultos, burlas, amenazas o comentarios que te hacen sentir mal.'
+        witness
+            ? 'Insultos, burlas, amenazas o comentarios hacia otra persona.'
+            : 'Insultos, burlas, amenazas o comentarios que te hacen sentir mal.',
       );
     }
     if (lower.contains('físico') || lower.contains('fisico')) {
       return (
         Icons.personal_injury_outlined,
         const Color(0xFFD94755),
-        'Empujones, golpes o cualquier contacto que te lastime o asuste.'
+        witness
+            ? 'Empujones, golpes o contacto que lastimó o asustó a otra persona.'
+            : 'Empujones, golpes o cualquier contacto que te lastime o asuste.',
       );
     }
     if (lower.contains('sexual')) {
       return (
         Icons.block_rounded,
         const Color(0xFFB92F43),
-        'Comentarios, gestos o contactos de tipo sexual que no consentiste.'
+        witness
+            ? 'Comentarios, gestos o contactos sexuales hacia otra persona.'
+            : 'Comentarios, gestos o contactos de tipo sexual que no consentiste.',
       );
     }
     if (lower.contains('digital')) {
       return (
         Icons.smartphone_rounded,
         OnboardingPalette.teal,
-        'Mensajes, fotos o publicaciones en redes que te acosan o exponen.'
+        witness
+            ? 'Mensajes, fotos o publicaciones que acosan o exponen a otra persona.'
+            : 'Mensajes, fotos o publicaciones en redes que te acosan o exponen.',
       );
     }
     return (
       Icons.help_outline_rounded,
       OnboardingPalette.teal,
-      'Selecciona la opción más cercana y detalla lo ocurrido en la descripción.'
+      'Selecciona la opción más cercana y detalla lo ocurrido en la descripción.',
     );
   }
 }
@@ -267,7 +287,10 @@ class _SituationDropdown extends StatelessWidget {
         filled: true,
         fillColor: Colors.grey.shade300,
         contentPadding: const EdgeInsets.only(
-          left: 18, right: 56, top: 16, bottom: 16,
+          left: 18,
+          right: 56,
+          top: 16,
+          bottom: 16,
         ),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(30),
@@ -324,10 +347,7 @@ class _ErrorRetry extends StatelessWidget {
             style: const TextStyle(color: Colors.black87),
           ),
           const SizedBox(height: 10),
-          TextButton(
-            onPressed: onRetry,
-            child: const Text('Reintentar'),
-          ),
+          TextButton(onPressed: onRetry, child: const Text('Reintentar')),
         ],
       ),
     );

@@ -130,6 +130,29 @@ void main() {
     },
   );
 
+  test(
+    'Witness report remains a preview and starting another flow clears it',
+    () async {
+      final report = _report();
+      addTearDown(report.dispose);
+      report.start(ReportRole.witness);
+      report.setIdTipoAcoso(21);
+      report.setPasoInstitucion(true);
+      report.setDescripcion('Presencié una situación en el aula.');
+
+      expect(await report.submit(), isTrue);
+      expect(report.generatedCodigoCaso, startsWith('LILA-DEMO-'));
+      expect(report.isWitness, isTrue);
+
+      report.start(ReportRole.victim);
+      expect(report.isWitness, isFalse);
+      expect(report.idTipoAcoso, isNull);
+      expect(report.pasoInstitucion, isNull);
+      expect(report.descripcion, isEmpty);
+      expect(report.generatedCodigoCaso, isNull);
+    },
+  );
+
   setUpAll(() async {
     final icons = FontLoader('MaterialIcons')
       ..addFont(rootBundle.load('fonts/MaterialIcons-Regular.otf'));
@@ -461,6 +484,90 @@ void main() {
     expect(find.byType(AppBottomBar), findsNothing);
     expect(tester.takeException(), isNull);
   });
+
+  testWidgets('Testigo completa los cinco pasos como vista previa', (
+    tester,
+  ) async {
+    _size(tester, const Size(390, 844));
+    final report = _report()..start(ReportRole.witness);
+    final catalog = TipoAcosoViewModel(_Catalog());
+    addTearDown(report.dispose);
+    addTearDown(catalog.dispose);
+    await tester.pumpWidget(_app(const ReportCaseStep1Page(), report, catalog));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Reporte como testigo'), findsOneWidget);
+    expect(find.textContaining('No son tus datos'), findsOneWidget);
+    await _continue(tester);
+    expect(find.text('¿Qué situación presenciaste?'), findsOneWidget);
+    await tester.ensureVisible(find.text('Acoso verbal'));
+    await tester.tap(find.text('Acoso verbal'));
+    await _continue(tester);
+    await tester.ensureVisible(find.text('Sí'));
+    await tester.tap(find.text('Sí'));
+    await _continue(tester);
+    expect(find.text('Cuéntanos lo que viste'), findsOneWidget);
+    await tester.enterText(
+      find.byType(TextField),
+      'Presencié comentarios ofensivos durante la clase.',
+    );
+    await _continue(tester);
+    expect(find.text('Agrega evidencias de la situación'), findsOneWidget);
+    await tester.ensureVisible(find.text('Enviar reporte'));
+    await tester.drag(find.byType(CustomScrollView), const Offset(0, -180));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Enviar reporte'));
+    await tester.pumpAndSettle();
+    expect(find.text('Vista de testigo'), findsOneWidget);
+    expect(find.textContaining('No se ha registrado un caso'), findsOneWidget);
+    expect(report.generatedCodigoCaso, startsWith('LILA-DEMO-'));
+    expect(tester.takeException(), isNull);
+  });
+
+  for (final size in [const Size(390, 844), const Size(1024, 768)]) {
+    testWidgets('Los botones abren recorridos separados en $size', (
+      tester,
+    ) async {
+      _size(tester, size);
+      final report = _report();
+      final catalog = TipoAcosoViewModel(_Catalog());
+      final status = CaseStatusViewModel(
+        casoRepository: _Cases(),
+        responsableRepository: _Responsibles(),
+        evidenciaRepository: _Evidence(),
+      );
+      addTearDown(report.dispose);
+      addTearDown(catalog.dispose);
+      addTearDown(status.dispose);
+      await tester.pumpWidget(
+        MultiProvider(
+          providers: [
+            ChangeNotifierProvider.value(value: report),
+            ChangeNotifierProvider.value(value: catalog),
+            ChangeNotifierProvider.value(value: status),
+          ],
+          child: const MaterialApp(home: HomePage()),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.text('Soy víctima'));
+      await tester.pumpAndSettle();
+      expect(find.byType(ReportCaseStep1Page), findsOneWidget);
+      expect(report.role, ReportRole.victim);
+      report.setIdTipoAcoso(21);
+      tester.state<NavigatorState>(find.byType(Navigator)).pop();
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.text('Soy testigo'));
+      await tester.pumpAndSettle();
+      expect(find.byType(ReportCaseStep1Page), findsOneWidget);
+      expect(find.text('Reporte como testigo'), findsOneWidget);
+      expect(report.role, ReportRole.witness);
+      expect(report.idTipoAcoso, isNull);
+      expect(tester.takeException(), isNull);
+    });
+  }
 
   for (final size in [const Size(320, 568), const Size(390, 844)]) {
     testWidgets('El botón de pánico abre y cierra su vista en $size', (
