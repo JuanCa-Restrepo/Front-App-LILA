@@ -179,7 +179,9 @@ class _HomePageState extends State<HomePage> {
                 );
               },
             ),
-            if (!_showEmergencyOverlay) const SideChat(bottom: 18),
+            if (!_showEmergencyOverlay &&
+                MediaQuery.viewInsetsOf(context).bottom == 0)
+              const SideChat(bottom: 18),
             if (_showEmergencyOverlay)
               _EmergencyOverlay(onClose: _closeEmergency),
           ],
@@ -214,7 +216,7 @@ class _WideHomeLayout extends StatelessWidget {
   Widget build(BuildContext context) {
     final keyboardIsOpen = MediaQuery.viewInsetsOf(context).bottom > 0;
     final content = Padding(
-      padding: const EdgeInsets.fromLTRB(28, 18, 28, 18),
+      padding: const EdgeInsets.fromLTRB(28, 18, 28, 94),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -321,7 +323,7 @@ class _ResponsiveBody extends StatelessWidget {
             horizontalPadding,
             12,
             horizontalPadding,
-            16,
+            94,
           ),
           keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
           child: ConstrainedBox(
