@@ -43,3 +43,6 @@ app.*.map.json
 /android/app/debug
 /android/app/profile
 /android/app/release
+
+# Google Service Account credentials — NUNCA subir a Git
+assets/service_account.json
