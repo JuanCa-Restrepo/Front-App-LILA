@@ -44,6 +44,7 @@ class ReportFinalPage extends StatelessWidget {
     final codigo = report.generatedCodigoCaso;
     final isWitness = report.isWitness;
     final isDemo = codigo?.startsWith('LILA-DEMO-') ?? false;
+    final visibleCode = isDemo ? 'ID-9832' : codigo;
     final canCheckStatus = codigo != null && !isDemo;
 
     return Scaffold(
@@ -173,7 +174,7 @@ class ReportFinalPage extends StatelessWidget {
                         style: reportSecondaryStyle,
                       ),
                       SizedBox(height: compact ? 20 : 28),
-                      _CodeCard(code: codigo, isDemo: isDemo),
+                      _CodeCard(code: visibleCode, isDemo: isDemo),
                       const SizedBox(height: 16),
                       _InfoCard(isDemo: isDemo),
                       if (canCheckStatus) ...[

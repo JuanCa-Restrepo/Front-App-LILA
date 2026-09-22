@@ -520,6 +520,7 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.text('Vista de testigo'), findsOneWidget);
     expect(find.textContaining('No se ha registrado un caso'), findsOneWidget);
+    expect(find.text('ID-9832'), findsOneWidget);
     expect(report.generatedCodigoCaso, startsWith('LILA-DEMO-'));
     expect(tester.takeException(), isNull);
   });
@@ -689,10 +690,12 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('Vista de demostración'), findsOneWidget);
+    expect(find.text('ID-9832'), findsOneWidget);
+    expect(find.text('LILA-DEMO-12345'), findsNothing);
     expect(find.text('Consultar estado'), findsNothing);
     await tester.tap(find.text('Copiar código'));
     await tester.pump();
-    expect(copiedCode, 'LILA-DEMO-12345');
+    expect(copiedCode, 'ID-9832');
     expect(tester.takeException(), isNull);
   });
 }
