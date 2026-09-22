@@ -18,6 +18,7 @@ import 'package:mockups/presentation/viewmodels/case_status_viewmodel.dart';
 import 'package:mockups/presentation/viewmodels/report_case_viewmodel.dart';
 import 'package:mockups/presentation/viewmodels/tipo_acoso_viewmodel.dart';
 import 'package:mockups/presentation/views/home/home_page.dart';
+import 'package:mockups/presentation/views/case_status/state_report_page.dart';
 import 'package:mockups/presentation/views/report_case/report_case_step1_page.dart';
 import 'package:mockups/presentation/views/report_case/report_case_step2_page.dart';
 import 'package:mockups/presentation/views/report_case/report_case_step3_page.dart';
@@ -484,6 +485,48 @@ void main() {
     expect(find.byType(AppBottomBar), findsNothing);
     expect(tester.takeException(), isNull);
   });
+
+  for (final size in [const Size(390, 844), const Size(1024, 768)]) {
+    testWidgets('Inicio abre el estado demo con ID-9832 en $size', (
+      tester,
+    ) async {
+      _size(tester, size);
+      final report = _report();
+      final status = CaseStatusViewModel(
+        casoRepository: _Cases(),
+        responsableRepository: _Responsibles(),
+        evidenciaRepository: _Evidence(),
+      );
+      addTearDown(report.dispose);
+      addTearDown(status.dispose);
+      await tester.pumpWidget(
+        MultiProvider(
+          providers: [
+            ChangeNotifierProvider.value(value: report),
+            ChangeNotifierProvider.value(value: status),
+          ],
+          child: const MaterialApp(home: HomePage()),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      await tester.enterText(find.byType(TextField), ' id-9832 ');
+      await tester.ensureVisible(find.text('Consultar estado'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Consultar estado'));
+      await tester.pumpAndSettle();
+
+      expect(find.byType(StateReportPage), findsOneWidget);
+      expect(find.text('Estado del Radicado: ID-9832'), findsOneWidget);
+      expect(
+        find.textContaining('no corresponde a un caso registrado'),
+        findsOneWidget,
+      );
+      expect(status.snapshot?.isDemo, isTrue);
+      expect(status.isLoading, isFalse);
+      expect(tester.takeException(), isNull);
+    });
+  }
 
   testWidgets('Testigo completa los cinco pasos como vista previa', (
     tester,

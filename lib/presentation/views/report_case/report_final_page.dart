@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 
+import '../../demo_case_code.dart';
 import '../../viewmodels/case_status_viewmodel.dart';
 import '../../viewmodels/report_case_viewmodel.dart';
 import '../case_status/state_report_page.dart';
@@ -44,7 +45,7 @@ class ReportFinalPage extends StatelessWidget {
     final codigo = report.generatedCodigoCaso;
     final isWitness = report.isWitness;
     final isDemo = codigo?.startsWith('LILA-DEMO-') ?? false;
-    final visibleCode = isDemo ? 'ID-9832' : codigo;
+    final visibleCode = isDemo ? demoCaseCode : codigo;
     final canCheckStatus = codigo != null && !isDemo;
 
     return Scaffold(

@@ -38,6 +38,7 @@ class _HomePageState extends State<HomePage> {
       _showSnack('Ingresa un código para consultar.');
       return;
     }
+    FocusScope.of(context).unfocus();
     final vm = context.read<CaseStatusViewModel>();
     final found = await vm.lookUpByCode(code);
     if (!mounted) return;

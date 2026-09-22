@@ -5,10 +5,12 @@ import 'package:provider/provider.dart';
 import '../../../data/models/caso_model.dart';
 import '../../../data/models/evidencia_model.dart';
 import '../../../data/models/responsable_model.dart';
+import '../../demo_case_code.dart';
 import '../../viewmodels/case_status_viewmodel.dart';
 import '../../widgets/app_bottom_bar.dart';
 import '../../widgets/side_chat.dart';
 import '../home/home_page.dart';
+import '../onboarding/onboarding_style.dart';
 
 /// Estado del radicado: muestra el `CaseStatusSnapshot` cargado por el
 /// `CaseStatusViewModel` (caso + responsable opcional + evidencias).
@@ -66,13 +68,33 @@ class StateReportPage extends StatelessWidget {
                         ),
                       ),
                       SizedBox(height: (h * 0.045).clamp(20.0, 40.0)),
+                      if (snapshot.isDemo) ...[
+                        Container(
+                          width: double.infinity,
+                          padding: const EdgeInsets.all(16),
+                          decoration: BoxDecoration(
+                            color: OnboardingPalette.paleTeal,
+                            borderRadius: BorderRadius.circular(18),
+                          ),
+                          child: Text(
+                            'Vista de demostración. $demoCaseCode no corresponde a un caso registrado.',
+                            style: const TextStyle(
+                              color: OnboardingPalette.teal,
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 14),
+                      ],
                       _StatusCard(estado: snapshot.caso.estado),
-                      const SizedBox(height: 14),
-                      _ResponsibleCard(responsable: snapshot.responsable),
-                      SizedBox(height: (h * 0.03).clamp(12.0, 24.0)),
-                      _Timeline(caso: snapshot.caso, screenWidth: w),
-                      SizedBox(height: (h * 0.035).clamp(14.0, 26.0)),
-                      _EvidencesSection(evidencias: snapshot.evidencias),
+                      if (!snapshot.isDemo) ...[
+                        const SizedBox(height: 14),
+                        _ResponsibleCard(responsable: snapshot.responsable),
+                        SizedBox(height: (h * 0.03).clamp(12.0, 24.0)),
+                        _Timeline(caso: snapshot.caso, screenWidth: w),
+                        SizedBox(height: (h * 0.035).clamp(14.0, 26.0)),
+                        _EvidencesSection(evidencias: snapshot.evidencias),
+                      ],
                     ],
                   ),
                 );
@@ -192,6 +214,8 @@ class _StatusCard extends StatelessWidget {
         return 'Cerrado';
       case 'inactivo':
         return 'Caso archivado';
+      case 'demo':
+        return 'Vista de demostración';
       default:
         return raw.isEmpty ? 'Sin estado' : raw;
     }

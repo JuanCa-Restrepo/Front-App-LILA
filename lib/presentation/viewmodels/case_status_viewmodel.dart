@@ -4,6 +4,7 @@ import '../../data/models/responsable_model.dart';
 import '../../domain/repositories/caso_repository.dart';
 import '../../domain/repositories/evidencia_repository.dart';
 import '../../domain/repositories/responsable_repository.dart';
+import '../demo_case_code.dart';
 import 'base_view_model.dart';
 
 /// Estado consolidado de un caso para la pantalla "Estado del Radicado".
@@ -11,11 +12,13 @@ class CaseStatusSnapshot {
   final CasoModel caso;
   final ResponsableModel? responsable;
   final List<EvidenciaModel> evidencias;
+  final bool isDemo;
 
   const CaseStatusSnapshot({
     required this.caso,
     this.responsable,
     this.evidencias = const [],
+    this.isDemo = false,
   });
 }
 
@@ -51,8 +54,25 @@ class CaseStatusViewModel extends BaseViewModel {
     _snapshot = null;
     notifyListeners();
 
+    final trimmed = codigoCaso.trim();
+    if (trimmed.toUpperCase() == demoCaseCode) {
+      clearError();
+      _snapshot = const CaseStatusSnapshot(
+        caso: CasoModel(
+          idCaso: 'demo-9832',
+          idUsuario: 'demo',
+          idTipoAcoso: 0,
+          codigoCaso: demoCaseCode,
+          pasoInstitucion: false,
+          estado: 'demo',
+        ),
+        isDemo: true,
+      );
+      notifyListeners();
+      return true;
+    }
+
     final result = await guard<CaseStatusSnapshot?>(() async {
-      final trimmed = codigoCaso.trim();
       if (trimmed.isEmpty) return null;
 
       final caso = await _casoRepository.findByCodigo(trimmed);
