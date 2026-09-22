@@ -53,9 +53,9 @@ class CasoModel {
     return {
       'idUsuario': idUsuario,
       'idTipoAcoso': idTipoAcoso,
-      if (idResponsable != null) 'idResponsable': idResponsable,
+      'idResponsable': ?idResponsable,
       'pasoInstitucion': pasoInstitucion,
-      if (descripcion != null) 'descripcion': descripcion,
+      'descripcion': ?descripcion,
     };
   }
 
@@ -79,10 +79,7 @@ class CreatedCaseModel {
   final String mensaje;
   final String codigoCaso;
 
-  const CreatedCaseModel({
-    required this.mensaje,
-    required this.codigoCaso,
-  });
+  const CreatedCaseModel({required this.mensaje, required this.codigoCaso});
 
   factory CreatedCaseModel.fromJson(Map<String, dynamic> json) {
     return CreatedCaseModel(

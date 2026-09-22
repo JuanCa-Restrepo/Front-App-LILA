@@ -6,11 +6,7 @@ class ProgressHeader extends StatelessWidget {
   final double progress;
   final VoidCallback? onBack;
 
-  const ProgressHeader({
-    super.key,
-    required this.progress,
-    this.onBack,
-  });
+  const ProgressHeader({super.key, required this.progress, this.onBack});
 
   @override
   Widget build(BuildContext context) {
@@ -26,10 +22,7 @@ class ProgressHeader extends StatelessWidget {
               color: Colors.grey.shade200,
               shape: BoxShape.circle,
             ),
-            child: const Icon(
-              Icons.arrow_back,
-              color: Colors.black87,
-            ),
+            child: const Icon(Icons.arrow_back, color: Colors.black87),
           ),
         ),
         const SizedBox(width: 12),

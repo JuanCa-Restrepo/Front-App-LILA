@@ -19,9 +19,9 @@ class AuthViewModel extends BaseViewModel {
     required AuthService authService,
     required DeviceService deviceService,
     required UsuarioRepository usuarioRepository,
-  })  : _authService = authService,
-        _deviceService = deviceService,
-        _usuarioRepository = usuarioRepository;
+  }) : _authService = authService,
+       _deviceService = deviceService,
+       _usuarioRepository = usuarioRepository;
 
   String? _userId;
   String? get userId => _userId;

@@ -25,9 +25,9 @@ class ReportFinalPage extends StatelessWidget {
         MaterialPageRoute(builder: (_) => const StateReportPage()),
       );
     } else if (caseStatus.errorMessage != null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(caseStatus.errorMessage!)),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(caseStatus.errorMessage!)));
     }
   }
 
@@ -57,11 +57,14 @@ class ReportFinalPage extends StatelessWidget {
         child: Stack(
           children: [
             Consumer<ReportCaseViewModel>(
-              builder: (_, vm, __) {
+              builder: (_, vm, _) {
                 final codigo = vm.generatedCodigoCaso ?? '#--';
                 return SingleChildScrollView(
                   padding: EdgeInsets.fromLTRB(
-                    horizontalPadding, 14, horizontalPadding, 150,
+                    horizontalPadding,
+                    14,
+                    horizontalPadding,
+                    150,
                   ),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,

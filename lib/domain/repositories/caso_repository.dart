@@ -6,10 +6,7 @@ class CreatedCaseInfo {
   final String codigoCaso;
   final String mensaje;
 
-  const CreatedCaseInfo({
-    required this.codigoCaso,
-    required this.mensaje,
-  });
+  const CreatedCaseInfo({required this.codigoCaso, required this.mensaje});
 }
 
 abstract class CasoRepository {

@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:flutter/services.dart' show rootBundle;
 import 'package:googleapis/drive/v3.dart' as drive;
 import 'package:googleapis_auth/auth_io.dart';
+
 /// Subida de archivos a Google Drive mediante una Service Account.
 abstract class GoogleDriveUploader {
   Future<String> upload({
@@ -48,10 +49,9 @@ class GoogleDriveUploaderImpl implements GoogleDriveUploader {
     );
     final credentials = ServiceAccountCredentials.fromJson(jsonString);
 
-    _client = await clientViaServiceAccount(
-      credentials,
-      [drive.DriveApi.driveFileScope],
-    );
+    _client = await clientViaServiceAccount(credentials, [
+      drive.DriveApi.driveFileScope,
+    ]);
     return _client!;
   }
 
@@ -65,7 +65,9 @@ class GoogleDriveUploaderImpl implements GoogleDriveUploader {
     final driveApi = drive.DriveApi(client);
 
     final file = File(localPath);
-    final name = fileName ?? '${tipoArchivo}_${DateTime.now().millisecondsSinceEpoch}${_ext(localPath)}';
+    final name =
+        fileName ??
+        '${tipoArchivo}_${DateTime.now().millisecondsSinceEpoch}${_ext(localPath)}';
 
     final driveFile = drive.File()
       ..name = name
@@ -73,10 +75,7 @@ class GoogleDriveUploaderImpl implements GoogleDriveUploader {
 
     final media = drive.Media(file.openRead(), await file.length());
 
-    final created = await driveApi.files.create(
-      driveFile,
-      uploadMedia: media,
-    );
+    final created = await driveApi.files.create(driveFile, uploadMedia: media);
 
     // Hacer el archivo accesible con link.
     await driveApi.permissions.create(

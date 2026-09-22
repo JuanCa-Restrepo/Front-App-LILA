@@ -9,11 +9,7 @@ class SideChat extends StatefulWidget {
   final double? top;
   final double? bottom;
 
-  const SideChat({
-    super.key,
-    this.top,
-    this.bottom,
-  });
+  const SideChat({super.key, this.top, this.bottom});
 
   @override
   State<SideChat> createState() => _SideChatState();
@@ -51,7 +47,9 @@ class _SideChatState extends State<SideChat> {
               ),
             ],
           ),
-          child: _expanded ? _ExpandedContent(onClose: _toggle) : _CollapsedContent(),
+          child: _expanded
+              ? _ExpandedContent(onClose: _toggle)
+              : _CollapsedContent(),
         ),
       ),
     );
@@ -64,11 +62,7 @@ class _CollapsedContent extends StatelessWidget {
     return const Center(
       child: RotatedBox(
         quarterTurns: 3,
-        child: Icon(
-          Icons.chat_bubble_outline,
-          size: 24,
-          color: Colors.black87,
-        ),
+        child: Icon(Icons.chat_bubble_outline, size: 24, color: Colors.black87),
       ),
     );
   }
@@ -103,11 +97,7 @@ class _ExpandedContent extends StatelessWidget {
           ),
           GestureDetector(
             onTap: onClose,
-            child: const Icon(
-              Icons.close,
-              size: 18,
-              color: Colors.black87,
-            ),
+            child: const Icon(Icons.close, size: 18, color: Colors.black87),
           ),
         ],
       ),

@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
-import '../../../data/models/tipo_acoso_model.dart';
 import '../../viewmodels/report_case_viewmodel.dart';
 import '../../viewmodels/tipo_acoso_viewmodel.dart';
 import '../onboarding/onboarding_style.dart';
@@ -75,6 +74,46 @@ class _ReportCaseStep2PageState extends State<ReportCaseStep2Page> {
       ],
     ),
   );
+
+  /// Mapeo visual local para presentar cualquier elemento del catálogo.
+  /// Los identificadores y nombres seleccionables siguen viniendo del backend.
+  (IconData, Color, String) _situationStyle(String name) {
+    final lower = name.toLowerCase();
+    if (lower.contains('verbal')) {
+      return (
+        Icons.record_voice_over_rounded,
+        OnboardingPalette.purple,
+        'Insultos, burlas, amenazas o comentarios que te hacen sentir mal.',
+      );
+    }
+    if (lower.contains('físico') || lower.contains('fisico')) {
+      return (
+        Icons.personal_injury_outlined,
+        const Color(0xFFD94755),
+        'Empujones, golpes o cualquier contacto que te lastime o asuste.',
+      );
+    }
+    if (lower.contains('sexual')) {
+      return (
+        Icons.block_rounded,
+        const Color(0xFFB92F43),
+        'Comentarios, gestos o contactos de tipo sexual que no consentiste.',
+      );
+    }
+    if (lower.contains('digital')) {
+      return (
+        Icons.smartphone_rounded,
+        OnboardingPalette.teal,
+        'Mensajes, fotos o publicaciones en redes que te acosan o exponen.',
+      );
+    }
+    return (
+      Icons.help_outline_rounded,
+      OnboardingPalette.teal,
+      'Selecciona la opción más cercana y detalla lo ocurrido en la descripción.',
+    );
+  }
+
   @override
   Widget build(BuildContext context) => ReportStepLayout(
     step: 2,
@@ -191,108 +230,9 @@ class _ReportCaseStep2PageState extends State<ReportCaseStep2Page> {
                 ],
               ),
             ),
-            const AppBottomBar(),
-            const SideChat(),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class _SituationDropdown extends StatelessWidget {
-  final List<TipoAcosoModel> items;
-  final int? selectedId;
-  final ValueChanged<int?> onChanged;
-  final double screenWidth;
-
-  const _SituationDropdown({
-    required this.items,
-    required this.selectedId,
-    required this.onChanged,
-    required this.screenWidth,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return DropdownButtonFormField<int>(
-      initialValue: selectedId,
-      isExpanded: true,
-      itemHeight: 56,
-      icon: const Icon(Icons.keyboard_arrow_down_rounded, size: 34),
-      dropdownColor: Colors.white,
-      style: TextStyle(
-        fontSize: (screenWidth * 0.038).clamp(13.0, 16.0),
-        color: Colors.black87,
-        fontWeight: FontWeight.w600,
-      ),
-      decoration: InputDecoration(
-        filled: true,
-        fillColor: Colors.grey.shade300,
-        contentPadding: const EdgeInsets.only(
-          left: 18, right: 56, top: 16, bottom: 16,
-        ),
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(30),
-          borderSide: BorderSide.none,
-        ),
-        enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(30),
-          borderSide: BorderSide.none,
-        ),
-      ),
-      hint: const Text(
-        'Selecciona el tipo de acoso que estás reportando',
-        style: TextStyle(color: Colors.black87, fontWeight: FontWeight.w600),
-        maxLines: 1,
-        overflow: TextOverflow.ellipsis,
-        softWrap: false,
-      ),
-      items: items
-          .map(
-            (t) => DropdownMenuItem(
-              value: t.idTipoAcoso,
-              child: Text(
-                t.descripcion,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-              ),
-            ),
-          )
-          .toList(),
-      onChanged: onChanged,
-    );
-  }
-}
-
-class _ErrorRetry extends StatelessWidget {
-  final String message;
-  final VoidCallback onRetry;
-
-  const _ErrorRetry({required this.message, required this.onRetry});
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(vertical: 18, horizontal: 16),
-      decoration: BoxDecoration(
-        color: Colors.red.shade50,
-        borderRadius: BorderRadius.circular(18),
-      ),
-      child: Column(
-        children: [
-          Text(
-            message,
-            textAlign: TextAlign.center,
-            style: const TextStyle(color: Colors.black87),
           ),
-          const SizedBox(height: 10),
-          TextButton(
-            onPressed: onRetry,
-            child: const Text('Reintentar'),
-          ),
-        ],
-      ),
-    );
-  }
+        ),
+      ],
+    ),
+  );
 }

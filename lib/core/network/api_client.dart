@@ -30,10 +30,7 @@ class ApiClient {
       ),
     );
 
-    dio.interceptors.addAll([
-      LoggerInterceptor(),
-      ErrorInterceptor(),
-    ]);
+    dio.interceptors.addAll([LoggerInterceptor(), ErrorInterceptor()]);
 
     return ApiClient._(dio);
   }

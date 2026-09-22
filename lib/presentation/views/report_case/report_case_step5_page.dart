@@ -16,6 +16,26 @@ class ReportCaseStep5Page extends StatelessWidget {
   Future<void> _pickImage(BuildContext context) async {
     final picked = await ImagePicker().pickImage(source: ImageSource.gallery);
     if (picked == null || !context.mounted) return;
+    final lowerName = picked.name.toLowerCase();
+    final supported =
+        lowerName.endsWith('.jpg') ||
+        lowerName.endsWith('.jpeg') ||
+        lowerName.endsWith('.png');
+    if (!supported) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Selecciona una imagen JPG o PNG.')),
+      );
+      return;
+    }
+    const maxBytes = 10 * 1024 * 1024;
+    if (await picked.length() > maxBytes) {
+      if (!context.mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('La imagen no puede superar los 10 MB.')),
+      );
+      return;
+    }
+    if (!context.mounted) return;
     context.read<ReportCaseViewModel>().addEvidence(
       EvidenceDraft(
         localPath: picked.path,

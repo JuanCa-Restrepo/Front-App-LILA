@@ -29,7 +29,7 @@ class StateReportPage extends StatelessWidget {
         child: Stack(
           children: [
             Consumer<CaseStatusViewModel>(
-              builder: (_, vm, __) {
+              builder: (_, vm, _) {
                 if (vm.isLoading) {
                   return const Center(
                     child: CircularProgressIndicator(color: Colors.black87),
@@ -50,7 +50,10 @@ class StateReportPage extends StatelessWidget {
                 }
                 return SingleChildScrollView(
                   padding: EdgeInsets.fromLTRB(
-                    horizontalPadding, 14, horizontalPadding, 150,
+                    horizontalPadding,
+                    14,
+                    horizontalPadding,
+                    150,
                   ),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -208,7 +211,7 @@ class _ResponsibleCard extends StatelessWidget {
     final text = responsable == null
         ? 'Aún no se ha asignado un responsable a este caso.'
         : 'Profesional a cargo: ${responsable!.nombre}'
-            '${responsable!.cargo != null ? ' (${responsable!.cargo})' : ''}';
+              '${responsable!.cargo != null ? ' (${responsable!.cargo})' : ''}';
 
     return Container(
       width: double.infinity,
@@ -378,31 +381,32 @@ class _EvidencesSection extends StatelessWidget {
           ),
         ),
         const SizedBox(height: 8),
-        ...evidencias.map((e) => Padding(
-              padding: const EdgeInsets.only(bottom: 6),
-              child: Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-                decoration: BoxDecoration(
-                  color: Colors.grey.shade200,
-                  borderRadius: BorderRadius.circular(14),
-                ),
-                child: Row(
-                  children: [
-                    Icon(_iconFor(e.tipoArchivo), size: 22),
-                    const SizedBox(width: 10),
-                    Expanded(
-                      child: Text(
-                        e.urlArchivo,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: const TextStyle(fontSize: 13),
-                      ),
-                    ),
-                  ],
-                ),
+        ...evidencias.map(
+          (e) => Padding(
+            padding: const EdgeInsets.only(bottom: 6),
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+              decoration: BoxDecoration(
+                color: Colors.grey.shade200,
+                borderRadius: BorderRadius.circular(14),
               ),
-            )),
+              child: Row(
+                children: [
+                  Icon(_iconFor(e.tipoArchivo), size: 22),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: Text(
+                      e.urlArchivo,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(fontSize: 13),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
       ],
     );
   }

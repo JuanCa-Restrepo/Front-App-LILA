@@ -14,8 +14,8 @@ class EvidenciaViewModel extends BaseViewModel {
   EvidenciaViewModel({
     required EvidenciaRepository repository,
     required GoogleDriveUploader driveUploader,
-  })  : _repository = repository,
-        _driveUploader = driveUploader;
+  }) : _repository = repository,
+       _driveUploader = driveUploader;
 
   EvidenciaModel? _lastUploaded;
   EvidenciaModel? get lastUploaded => _lastUploaded;

@@ -54,9 +54,7 @@ class App extends StatelessWidget {
         Provider<FlutterSecureStorage>(
           create: (_) => const FlutterSecureStorage(),
         ),
-        Provider<ApiClient>(
-          create: (_) => ApiClient.create(),
-        ),
+        Provider<ApiClient>(create: (_) => ApiClient.create()),
 
         // ==================================================
         // 2) Datasources
@@ -71,8 +69,7 @@ class App extends StatelessWidget {
           create: (_) => const TipoAcosoLocalDatasource(),
         ),
         Provider<ResponsableRemoteDatasource>(
-          create: (ctx) =>
-              ResponsableRemoteDatasource(ctx.read<ApiClient>()),
+          create: (ctx) => ResponsableRemoteDatasource(ctx.read<ApiClient>()),
         ),
         Provider<CasoRemoteDatasource>(
           create: (ctx) => CasoRemoteDatasource(ctx.read<ApiClient>()),
@@ -85,9 +82,8 @@ class App extends StatelessWidget {
         // 3) Repositorios — expuestos como interface
         // ==================================================
         Provider<UsuarioRepository>(
-          create: (ctx) => UsuarioRepositoryImpl(
-            ctx.read<UsuarioRemoteDatasource>(),
-          ),
+          create: (ctx) =>
+              UsuarioRepositoryImpl(ctx.read<UsuarioRemoteDatasource>()),
         ),
         Provider<TipoAcosoRepository>(
           create: (ctx) => TipoAcosoRepositoryImpl(
@@ -101,14 +97,11 @@ class App extends StatelessWidget {
           ),
         ),
         Provider<CasoRepository>(
-          create: (ctx) => CasoRepositoryImpl(
-            ctx.read<CasoRemoteDatasource>(),
-          ),
+          create: (ctx) => CasoRepositoryImpl(ctx.read<CasoRemoteDatasource>()),
         ),
         Provider<EvidenciaRepository>(
-          create: (ctx) => EvidenciaRepositoryImpl(
-            ctx.read<EvidenciaRemoteDatasource>(),
-          ),
+          create: (ctx) =>
+              EvidenciaRepositoryImpl(ctx.read<EvidenciaRemoteDatasource>()),
         ),
 
         // ==================================================
@@ -140,9 +133,7 @@ class App extends StatelessWidget {
           ),
         ),
         ChangeNotifierProvider(
-          create: (ctx) => TipoAcosoViewModel(
-            ctx.read<TipoAcosoRepository>(),
-          ),
+          create: (ctx) => TipoAcosoViewModel(ctx.read<TipoAcosoRepository>()),
         ),
         ChangeNotifierProvider(
           create: (ctx) => ReportCaseViewModel(

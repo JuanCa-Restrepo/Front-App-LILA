@@ -32,9 +32,14 @@ class _ReportCaseStep1PageState extends State<ReportCaseStep1Page> {
   }
 
   void _goNext() {
-    context.read<ReportCaseViewModel>().setOrientacionGenero(
-      _orientationController.text.trim(),
-    );
+    final report = context.read<ReportCaseViewModel>();
+    if (report.sexoBiologico == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Selecciona el sexo biológico.')),
+      );
+      return;
+    }
+    report.setOrientacionGenero(_orientationController.text.trim());
     FocusScope.of(context).unfocus();
     Navigator.push(
       context,

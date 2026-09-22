@@ -45,19 +45,35 @@ class _SplashPageState extends State<SplashPage> {
                   ? 'Inicializando la aplicación'
                   : 'No fue posible iniciar. Toca para reintentar',
               button: vm.errorMessage != null,
-              child: InkResponse(
-                onTap: vm.errorMessage != null && !vm.isLoading
-                    ? _bootstrap
-                    : null,
-                radius: 38,
-                child: const SizedBox.square(
-                  dimension: 52,
-                  child: CircularProgressIndicator(
-                    color: _purple,
-                    strokeWidth: 4.5,
-                    strokeCap: StrokeCap.round,
-                  ),
-                ),
+              child: Padding(
+                padding: const EdgeInsets.all(24),
+                child: vm.errorMessage == null || vm.isLoading
+                    ? const SizedBox.square(
+                        dimension: 52,
+                        child: CircularProgressIndicator(
+                          color: _purple,
+                          strokeWidth: 4.5,
+                          strokeCap: StrokeCap.round,
+                        ),
+                      )
+                    : Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          const Icon(
+                            Icons.cloud_off_rounded,
+                            color: _purple,
+                            size: 44,
+                          ),
+                          const SizedBox(height: 12),
+                          Text(vm.errorMessage!, textAlign: TextAlign.center),
+                          const SizedBox(height: 16),
+                          FilledButton.icon(
+                            onPressed: _bootstrap,
+                            icon: const Icon(Icons.refresh_rounded),
+                            label: const Text('Reintentar'),
+                          ),
+                        ],
+                      ),
               ),
             ),
           );

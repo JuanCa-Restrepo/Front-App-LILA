@@ -6,10 +6,10 @@ import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:mockups/data/models/tipo_acoso_model.dart';
 import 'package:provider/provider.dart';
 import 'package:mockups/core/services/auth_service.dart';
 import 'package:mockups/core/services/google_drive_uploader.dart';
-import 'package:mockups/domain/entities/tipo_acoso.dart';
 import 'package:mockups/domain/repositories/caso_repository.dart';
 import 'package:mockups/domain/repositories/evidencia_repository.dart';
 import 'package:mockups/domain/repositories/tipo_acoso_repository.dart';
@@ -27,15 +27,15 @@ class _Cases extends Fake implements CasoRepository {}
 class _Evidence extends Fake implements EvidenciaRepository {}
 
 class _Catalog implements TipoAcosoRepository {
-  Future<List<TipoAcoso>> Function()? fetch;
+  Future<List<TipoAcosoModel>> Function()? fetch;
   @override
-  Future<List<TipoAcoso>> fetchAll() async => fetch != null
+  Future<List<TipoAcosoModel>> fetchAll() async => fetch != null
       ? fetch!()
       : const [
-          TipoAcoso(idTipoAcoso: 21, descripcion: 'Acoso verbal'),
-          TipoAcoso(idTipoAcoso: 35, descripcion: 'Acoso físico'),
-          TipoAcoso(idTipoAcoso: 48, descripcion: 'Acoso sexual'),
-          TipoAcoso(idTipoAcoso: 92, descripcion: 'Acoso digital'),
+          TipoAcosoModel(idTipoAcoso: 21, descripcion: 'Acoso verbal'),
+          TipoAcosoModel(idTipoAcoso: 35, descripcion: 'Acoso físico'),
+          TipoAcosoModel(idTipoAcoso: 48, descripcion: 'Acoso sexual'),
+          TipoAcosoModel(idTipoAcoso: 92, descripcion: 'Acoso digital'),
         ];
 }
 
@@ -181,7 +181,7 @@ void main() {
     'Catalog loading, retry, empty response and orientation guide work',
     (tester) async {
       _size(tester, const Size(390, 844));
-      final pending = Completer<List<TipoAcoso>>();
+      final pending = Completer<List<TipoAcosoModel>>();
       final repo = _Catalog()..fetch = () => pending.future;
       final catalog = TipoAcosoViewModel(repo);
       final report = _report();

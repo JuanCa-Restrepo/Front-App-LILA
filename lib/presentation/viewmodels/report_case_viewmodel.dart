@@ -1,5 +1,6 @@
 import '../../core/services/auth_service.dart';
 import '../../core/services/google_drive_uploader.dart';
+import '../../core/errors/app_exceptions.dart';
 import '../../domain/repositories/caso_repository.dart';
 import '../../domain/repositories/evidencia_repository.dart';
 import 'base_view_model.dart';
@@ -52,10 +53,10 @@ class ReportCaseViewModel extends BaseViewModel {
     required EvidenciaRepository evidenciaRepository,
     required GoogleDriveUploader driveUploader,
     required AuthService authService,
-  })  : _casoRepository = casoRepository,
-        _evidenciaRepository = evidenciaRepository,
-        _driveUploader = driveUploader,
-        _authService = authService;
+  }) : _casoRepository = casoRepository,
+       _evidenciaRepository = evidenciaRepository,
+       _driveUploader = driveUploader,
+       _authService = authService;
 
   // ===== Step 1 — datos del afectado =====
   AffectedPersonType _personType = AffectedPersonType.adolescente;
@@ -127,6 +128,9 @@ class ReportCaseViewModel extends BaseViewModel {
   // ===== Resultado del envío =====
   String? _generatedCodigoCaso;
   String? get generatedCodigoCaso => _generatedCodigoCaso;
+  String? _createdCaseCode;
+  String? _createdCaseId;
+  final Map<String, String> _uploadedEvidenceUrls = {};
 
   // ===== Validación previa al envío =====
   String? validateBeforeSubmit() {
@@ -138,6 +142,9 @@ class ReportCaseViewModel extends BaseViewModel {
     }
     if (_descripcion.trim().length < 10) {
       return 'La descripción del caso debe tener al menos 10 caracteres.';
+    }
+    if (_sexoBiologico == null) {
+      return 'Debes seleccionar el sexo biológico (Paso 1).';
     }
     return null;
   }
@@ -160,35 +167,50 @@ class ReportCaseViewModel extends BaseViewModel {
     }
 
     final result = await guard<String>(() async {
-      final created = await _casoRepository.createCase(
-        idUsuario: userId,
-        idTipoAcoso: _idTipoAcoso!,
-        pasoInstitucion: _pasoInstitucion!,
-        descripcion: _descripcion.trim(),
-      );
+      if (_createdCaseCode == null) {
+        final created = await _casoRepository.createCase(
+          idUsuario: userId,
+          idTipoAcoso: _idTipoAcoso!,
+          pasoInstitucion: _pasoInstitucion!,
+          descripcion: _descripcion.trim(),
+        );
+        _createdCaseCode = created.codigoCaso;
+      }
 
       // Para enlazar evidencias necesitamos el `idCaso`. Lo recuperamos
       // por el código que acabamos de obtener.
       if (_pendingEvidences.isNotEmpty) {
-        final caso = await _casoRepository.findByCodigo(created.codigoCaso);
-        final idCaso = caso?.idCaso;
-        if (idCaso != null) {
-          for (final draft in _pendingEvidences) {
-            final url = await _driveUploader.upload(
-              localPath: draft.localPath,
-              tipoArchivo: draft.tipoArchivo,
-              fileName: draft.fileName,
-            );
-            await _evidenciaRepository.attachEvidence(
-              idCaso: idCaso,
-              tipoArchivo: draft.tipoArchivo,
-              urlArchivo: url,
-            );
-          }
+        if (_createdCaseId == null) {
+          final caso = await _casoRepository.findByCodigo(_createdCaseCode!);
+          _createdCaseId = caso?.idCaso;
+        }
+        if (_createdCaseId == null) {
+          throw const UnexpectedException(
+            'El caso fue creado, pero no se pudo asociar la evidencia. Reintenta el envío.',
+          );
+        }
+
+        for (final draft in List<EvidenceDraft>.of(_pendingEvidences)) {
+          final evidenceKey = '${draft.localPath}|${draft.fileName ?? ''}';
+          final url =
+              _uploadedEvidenceUrls[evidenceKey] ??
+              await _driveUploader.upload(
+                localPath: draft.localPath,
+                tipoArchivo: draft.tipoArchivo,
+                fileName: draft.fileName,
+              );
+          _uploadedEvidenceUrls[evidenceKey] = url;
+          await _evidenciaRepository.attachEvidence(
+            idCaso: _createdCaseId!,
+            tipoArchivo: draft.tipoArchivo,
+            urlArchivo: url,
+          );
+          _pendingEvidences.remove(draft);
+          _uploadedEvidenceUrls.remove(evidenceKey);
         }
       }
 
-      return created.codigoCaso;
+      return _createdCaseCode!;
     });
 
     if (result == null) return false;
@@ -206,6 +228,9 @@ class ReportCaseViewModel extends BaseViewModel {
     _pasoInstitucion = null;
     _descripcion = '';
     _pendingEvidences.clear();
+    _uploadedEvidenceUrls.clear();
+    _createdCaseCode = null;
+    _createdCaseId = null;
     _generatedCodigoCaso = null;
     clearError();
     notifyListeners();

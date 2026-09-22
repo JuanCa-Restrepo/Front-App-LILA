@@ -10,7 +10,7 @@ class TipoAcosoRepositoryImpl implements TipoAcosoRepository {
   const TipoAcosoRepositoryImpl(this._remote, this._local);
 
   @override
-  Future<List<TipoAcoso>> fetchAll() async {
+  Future<List<TipoAcosoModel>> fetchAll() async {
     try {
       final items = await _remote.fetchAll();
       try {

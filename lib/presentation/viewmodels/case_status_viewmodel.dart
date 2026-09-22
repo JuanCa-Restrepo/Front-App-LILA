@@ -32,9 +32,9 @@ class CaseStatusViewModel extends BaseViewModel {
     required CasoRepository casoRepository,
     required ResponsableRepository responsableRepository,
     required EvidenciaRepository evidenciaRepository,
-  })  : _casoRepository = casoRepository,
-        _responsableRepository = responsableRepository,
-        _evidenciaRepository = evidenciaRepository;
+  }) : _casoRepository = casoRepository,
+       _responsableRepository = responsableRepository,
+       _evidenciaRepository = evidenciaRepository;
 
   CaseStatusSnapshot? _snapshot;
   CaseStatusSnapshot? get snapshot => _snapshot;
@@ -60,12 +60,12 @@ class CaseStatusViewModel extends BaseViewModel {
 
       ResponsableModel? responsable;
       if (caso.idResponsable != null && caso.idResponsable!.isNotEmpty) {
-        responsable =
-            await _responsableRepository.fetchById(caso.idResponsable!);
+        responsable = await _responsableRepository.fetchById(
+          caso.idResponsable!,
+        );
       }
 
-      final evidencias =
-          await _evidenciaRepository.fetchByCase(caso.idCaso);
+      final evidencias = await _evidenciaRepository.fetchByCase(caso.idCaso);
 
       return CaseStatusSnapshot(
         caso: caso,

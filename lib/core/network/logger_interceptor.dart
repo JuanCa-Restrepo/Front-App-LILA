@@ -12,10 +12,7 @@ class LoggerInterceptor extends Interceptor {
   @override
   void onRequest(RequestOptions options, RequestInterceptorHandler handler) {
     if (kDebugMode) {
-      developer.log(
-        '→ ${options.method} ${options.uri}',
-        name: 'LILA.api',
-      );
+      developer.log('→ ${options.method} ${options.uri}', name: 'LILA.api');
     }
     handler.next(options);
   }

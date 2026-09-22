@@ -19,9 +19,9 @@ class TipoAcosoLocalDatasource {
       if (decoded is! List) return const [];
       return decoded
           .whereType<Map>()
-          .map((item) => TipoAcosoModel.fromJson(
-                Map<String, dynamic>.from(item),
-              ))
+          .map(
+            (item) => TipoAcosoModel.fromJson(Map<String, dynamic>.from(item)),
+          )
           .toList(growable: false);
     } on FormatException {
       await preferences.remove(_storageKey);
