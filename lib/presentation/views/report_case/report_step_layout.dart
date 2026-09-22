@@ -220,13 +220,6 @@ class ReportStepLayout extends StatelessWidget {
                                     ),
                             ),
                           ),
-                          TextButton(
-                            onPressed: () => Navigator.maybePop(context),
-                            style: TextButton.styleFrom(
-                              foregroundColor: accent,
-                            ),
-                            child: const Text('Volver'),
-                          ),
                         ],
                       ),
                     ),

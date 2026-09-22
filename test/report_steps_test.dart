@@ -231,9 +231,9 @@ void main() {
       const description = 'Recibí mensajes ofensivos ayer por la tarde.';
       await tester.enterText(find.byType(TextField), description);
       expect(report.descripcion, description);
-      await tester.ensureVisible(find.text('Volver'));
+      await tester.ensureVisible(find.byTooltip('Volver'));
       await tester.pumpAndSettle();
-      await tester.tap(find.text('Volver'));
+      await tester.tap(find.byTooltip('Volver'));
       await tester.pumpAndSettle();
       await _continue(tester);
       expect(
@@ -339,8 +339,10 @@ void main() {
               });
             }
           }
-          await tester.ensureVisible(find.text('Volver'));
+          await tester.ensureVisible(find.text(entry.$3));
           await tester.pumpAndSettle();
+          expect(find.text('Volver'), findsNothing);
+          expect(find.byTooltip('Volver'), findsOneWidget);
           expect(
             tester.getRect(find.text(entry.$3)).bottom,
             lessThan(tester.getRect(find.byType(AppBottomBar)).top),
@@ -371,7 +373,7 @@ void main() {
       'Descripción conservada con el teclado abierto.',
     );
     await tester.pumpAndSettle();
-    await tester.ensureVisible(find.text('Volver'));
+    await tester.ensureVisible(find.text('Continuar'));
     await tester.pumpAndSettle();
     expect(find.text('Continuar').hitTestable(), findsOneWidget);
     expect(tester.takeException(), isNull);
