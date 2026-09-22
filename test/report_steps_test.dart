@@ -509,10 +509,8 @@ void main() {
             ChangeNotifierProvider.value(value: status),
           ],
           child: MaterialApp(
-            builder: (context, child) => RepaintBoundary(
-              key: captureKey,
-              child: child!,
-            ),
+            builder: (context, child) =>
+                RepaintBoundary(key: captureKey, child: child!),
             home: const HomePage(),
           ),
         ),
@@ -527,7 +525,9 @@ void main() {
 
       expect(find.byType(StateReportPage), findsOneWidget);
       expect(find.text('Estado del Radicado: ID-9832'), findsOneWidget);
-      expect(find.textContaining('sin caso registrado'), findsOneWidget);
+      expect(find.byKey(const Key('case-status-card')), findsOneWidget);
+      expect(find.byKey(const Key('case-responsible-card')), findsOneWidget);
+      expect(find.byKey(const Key('case-guidance-tab')), findsOneWidget);
       expect(
         find.textContaining('Pendiente de revisión', findRichText: true),
         findsOneWidget,

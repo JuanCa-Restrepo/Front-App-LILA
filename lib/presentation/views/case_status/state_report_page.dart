@@ -7,33 +7,30 @@ import '../../../data/models/evidencia_model.dart';
 import '../../../data/models/responsable_model.dart';
 import '../../viewmodels/case_status_viewmodel.dart';
 import '../../widgets/app_bottom_bar.dart';
-import '../../widgets/side_chat.dart';
 import '../home/home_page.dart';
 import '../onboarding/onboarding_style.dart';
 
-/// Estado del radicado: muestra el `CaseStatusSnapshot` cargado por el
-/// `CaseStatusViewModel` (caso + responsable opcional + evidencias).
+const _pageBackground = OnboardingPalette.background;
+const _softSurface = Colors.white;
+const _ink = OnboardingPalette.ink;
+
+/// Estado del radicado: muestra el caso, su responsable y las evidencias
+/// cargadas por [CaseStatusViewModel].
 class StateReportPage extends StatelessWidget {
   const StateReportPage({super.key});
 
   @override
   Widget build(BuildContext context) {
-    final size = MediaQuery.of(context).size;
-    final w = size.width;
-    final h = size.height;
-    final horizontalPadding = (w * 0.08).clamp(20.0, 34.0);
-    final titleSize = (w * 0.05).clamp(20.0, 24.0);
-
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: _pageBackground,
       body: SafeArea(
         child: Stack(
           children: [
             Consumer<CaseStatusViewModel>(
-              builder: (_, vm, __) {
+              builder: (context, vm, child) {
                 if (vm.isLoading) {
                   return const Center(
-                    child: CircularProgressIndicator(color: Colors.black87),
+                    child: CircularProgressIndicator(color: _ink),
                   );
                 }
                 if (vm.errorMessage != null) {
@@ -42,6 +39,7 @@ class StateReportPage extends StatelessWidget {
                     text: vm.errorMessage!,
                   );
                 }
+
                 final snapshot = vm.snapshot;
                 if (snapshot == null) {
                   return const _CenteredMessage(
@@ -49,75 +47,69 @@ class StateReportPage extends StatelessWidget {
                     text: 'No hay caso cargado.',
                   );
                 }
-                return SingleChildScrollView(
-                  padding: EdgeInsets.fromLTRB(
-                    horizontalPadding, 14, horizontalPadding, 150,
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      _Header(),
-                      SizedBox(height: (h * 0.035).clamp(16.0, 32.0)),
-                      if (snapshot.isDemo)
-                        FittedBox(
-                          fit: BoxFit.scaleDown,
-                          alignment: Alignment.centerLeft,
-                          child: Text(
-                            'Estado del Radicado: ${snapshot.caso.codigoCaso}',
-                            style: const TextStyle(
-                              fontSize: 24,
-                              fontWeight: FontWeight.w700,
-                              color: Colors.black87,
-                            ),
-                          ),
-                        )
-                      else
-                        Text(
-                          'Estado del Radicado: ${snapshot.caso.codigoCaso}',
-                          style: TextStyle(
-                            fontSize: titleSize,
-                            fontWeight: FontWeight.w700,
-                            color: Colors.black87,
+
+                return LayoutBuilder(
+                  builder: (context, constraints) {
+                    final compact = constraints.maxHeight < 720;
+                    final narrow = constraints.maxWidth < 420;
+                    final horizontalPadding = constraints.maxWidth < 360
+                        ? 20.0
+                        : 32.0;
+
+                    return SingleChildScrollView(
+                      primary: false,
+                      physics: const BouncingScrollPhysics(),
+                      padding: EdgeInsets.fromLTRB(
+                        horizontalPadding,
+                        14,
+                        horizontalPadding,
+                        142,
+                      ),
+                      child: Center(
+                        child: ConstrainedBox(
+                          constraints: const BoxConstraints(maxWidth: 520),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              const _Header(),
+                              SizedBox(height: compact || narrow ? 30 : 40),
+                              FittedBox(
+                                fit: BoxFit.scaleDown,
+                                alignment: Alignment.centerLeft,
+                                child: Text(
+                                  'Estado del Radicado: ${snapshot.caso.codigoCaso}',
+                                  maxLines: 1,
+                                  style: const TextStyle(
+                                    color: _ink,
+                                    fontSize: 25,
+                                    height: 1.15,
+                                    fontWeight: FontWeight.w800,
+                                  ),
+                                ),
+                              ),
+                              SizedBox(height: compact || narrow ? 32 : 46),
+                              _StatusCard(estado: snapshot.caso.estado),
+                              const SizedBox(height: 16),
+                              _ResponsibleCard(
+                                responsable: snapshot.responsable,
+                              ),
+                              SizedBox(height: compact || narrow ? 22 : 28),
+                              _Timeline(caso: snapshot.caso),
+                              SizedBox(height: compact || narrow ? 24 : 34),
+                              _EvidencesSection(
+                                evidencias: snapshot.evidencias,
+                                sideOverflow: horizontalPadding,
+                              ),
+                            ],
                           ),
                         ),
-                      if (snapshot.isDemo) ...[
-                        const SizedBox(height: 8),
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 12,
-                            vertical: 7,
-                          ),
-                          decoration: BoxDecoration(
-                            color: OnboardingPalette.paleTeal,
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          child: const Text(
-                            'Vista de demostración · sin caso registrado',
-                            style: TextStyle(
-                              color: OnboardingPalette.teal,
-                              fontSize: 12,
-                              fontWeight: FontWeight.w700,
-                            ),
-                          ),
-                        ),
-                        const SizedBox(height: 18),
-                      ] else ...[
-                        SizedBox(height: (h * 0.045).clamp(20.0, 40.0)),
-                      ],
-                      _StatusCard(estado: snapshot.caso.estado),
-                      const SizedBox(height: 14),
-                      _ResponsibleCard(responsable: snapshot.responsable),
-                      SizedBox(height: (h * 0.03).clamp(12.0, 24.0)),
-                      _Timeline(caso: snapshot.caso, screenWidth: w),
-                      SizedBox(height: (h * 0.035).clamp(14.0, 26.0)),
-                      _EvidencesSection(evidencias: snapshot.evidencias),
-                    ],
-                  ),
+                      ),
+                    );
+                  },
                 );
               },
             ),
             const AppBottomBar(),
-            const SideChat(),
           ],
         ),
       ),
@@ -126,27 +118,22 @@ class StateReportPage extends StatelessWidget {
 }
 
 class _Header extends StatelessWidget {
+  const _Header();
+
   @override
   Widget build(BuildContext context) {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-        GestureDetector(
-          onTap: () => Navigator.pop(context),
-          child: Container(
-            width: 42,
-            height: 42,
-            decoration: BoxDecoration(
-              color: const Color(0xFFF5F6F7),
-              shape: BoxShape.circle,
-            ),
-            child: const Icon(Icons.arrow_back, color: Colors.black87),
-          ),
+        _HeaderButton(
+          tooltip: 'Volver',
+          icon: Icons.arrow_back_rounded,
+          onPressed: () => Navigator.maybePop(context),
         ),
-        GestureDetector(
-          onTap: () {
-            // Limpiamos el snapshot para que la próxima consulta arranque
-            // desde un estado fresco.
+        _HeaderButton(
+          tooltip: 'Ir al inicio',
+          icon: Icons.home_outlined,
+          onPressed: () {
             context.read<CaseStatusViewModel>().clear();
             Navigator.pushAndRemoveUntil(
               context,
@@ -154,17 +141,38 @@ class _Header extends StatelessWidget {
               (route) => false,
             );
           },
-          child: Container(
-            width: 42,
-            height: 42,
-            decoration: BoxDecoration(
-              color: const Color(0xFFF5F6F7),
-              shape: BoxShape.circle,
-            ),
-            child: const Icon(Icons.home_outlined, color: Colors.black87),
-          ),
         ),
       ],
+    );
+  }
+}
+
+class _HeaderButton extends StatelessWidget {
+  final String tooltip;
+  final IconData icon;
+  final VoidCallback onPressed;
+
+  const _HeaderButton({
+    required this.tooltip,
+    required this.icon,
+    required this.onPressed,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox.square(
+      dimension: 46,
+      child: IconButton(
+        tooltip: tooltip,
+        onPressed: onPressed,
+        icon: Icon(icon, size: 26),
+        color: OnboardingPalette.purple,
+        style: IconButton.styleFrom(
+          backgroundColor: _softSurface,
+          shadowColor: OnboardingPalette.purple.withValues(alpha: 0.12),
+          elevation: 2,
+        ),
+      ),
     );
   }
 }
@@ -177,39 +185,53 @@ class _StatusCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
+      key: const Key('case-status-card'),
       width: double.infinity,
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 18),
+      constraints: const BoxConstraints(minHeight: 90),
+      padding: const EdgeInsets.fromLTRB(18, 16, 16, 16),
       decoration: BoxDecoration(
-        color: const Color(0xFFE8E9EB),
-        borderRadius: BorderRadius.circular(24),
+        color: OnboardingPalette.palePurple,
+        borderRadius: BorderRadius.circular(26),
+        boxShadow: [
+          BoxShadow(
+            color: OnboardingPalette.purple.withValues(alpha: 0.08),
+            blurRadius: 18,
+            offset: const Offset(0, 7),
+          ),
+        ],
       ),
       child: Row(
         children: [
           Expanded(
-            child: RichText(
-              text: TextSpan(
-                style: const TextStyle(color: Colors.black87, fontSize: 16),
+            child: Text.rich(
+              TextSpan(
+                style: const TextStyle(color: _ink, fontSize: 16, height: 1.25),
                 children: [
                   const TextSpan(
                     text: 'Estado: ',
-                    style: TextStyle(fontWeight: FontWeight.w700),
+                    style: TextStyle(fontWeight: FontWeight.w800),
                   ),
                   TextSpan(
                     text: _humanizeEstado(estado),
-                    style: const TextStyle(fontWeight: FontWeight.w500),
+                    style: const TextStyle(fontWeight: FontWeight.w600),
                   ),
                 ],
               ),
             ),
           ),
+          const SizedBox(width: 12),
           Container(
-            width: 52,
-            height: 52,
-            decoration: BoxDecoration(
+            width: 58,
+            height: 58,
+            decoration: const BoxDecoration(
               color: Colors.white,
               shape: BoxShape.circle,
             ),
-            child: const Icon(Icons.history, size: 30, color: Colors.black87),
+            child: const Icon(
+              Icons.history_rounded,
+              size: 34,
+              color: OnboardingPalette.purple,
+            ),
           ),
         ],
       ),
@@ -248,42 +270,54 @@ class _ResponsibleCard extends StatelessWidget {
     final text = responsable == null
         ? 'Aún no se ha asignado un responsable a este caso.'
         : 'Profesional a cargo: ${responsable!.nombre}'
-            '${responsable!.cargo != null ? ' (${responsable!.cargo})' : ''}';
+              '${responsable!.cargo != null ? ' (${responsable!.cargo})' : ''}';
 
     return Container(
+      key: const Key('case-responsible-card'),
       width: double.infinity,
+      padding: const EdgeInsets.fromLTRB(10, 13, 10, 10),
       decoration: BoxDecoration(
-        color: const Color(0xFFE8E9EB),
-        borderRadius: BorderRadius.circular(24),
+        color: OnboardingPalette.paleTeal,
+        borderRadius: BorderRadius.circular(26),
+        boxShadow: [
+          BoxShadow(
+            color: OnboardingPalette.teal.withValues(alpha: 0.08),
+            blurRadius: 18,
+            offset: const Offset(0, 7),
+          ),
+        ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           const Padding(
-            padding: EdgeInsets.fromLTRB(14, 12, 14, 8),
+            padding: EdgeInsets.symmetric(horizontal: 8),
             child: Text(
               'Responsable',
               style: TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.w700,
-                color: Colors.black87,
+                color: _ink,
+                fontSize: 14,
+                fontWeight: FontWeight.w800,
               ),
             ),
           ),
+          const SizedBox(height: 11),
           Container(
             width: double.infinity,
-            margin: const EdgeInsets.fromLTRB(8, 0, 8, 8),
-            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
+            constraints: const BoxConstraints(minHeight: 68),
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 15),
             decoration: BoxDecoration(
-              color: const Color(0xFFF7F8F9),
-              borderRadius: BorderRadius.circular(20),
+              color: _softSurface,
+              borderRadius: BorderRadius.circular(21),
             ),
+            alignment: Alignment.centerLeft,
             child: Text(
               text,
               style: const TextStyle(
-                fontSize: 15,
-                color: Colors.black87,
-                fontWeight: FontWeight.w500,
+                color: _ink,
+                fontSize: 14,
+                height: 1.35,
+                fontWeight: FontWeight.w600,
               ),
             ),
           ),
@@ -295,9 +329,8 @@ class _ResponsibleCard extends StatelessWidget {
 
 class _Timeline extends StatelessWidget {
   final CasoModel caso;
-  final double screenWidth;
 
-  const _Timeline({required this.caso, required this.screenWidth});
+  const _Timeline({required this.caso});
 
   @override
   Widget build(BuildContext context) {
@@ -315,63 +348,60 @@ class _Timeline extends StatelessWidget {
         ),
     ];
 
-    if (entries.isEmpty) {
-      return const SizedBox.shrink();
-    }
+    if (entries.isEmpty) return const SizedBox.shrink();
 
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 6),
-      child: IntrinsicHeight(
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            SizedBox(
-              width: 22,
-              child: Column(
-                children: List.generate(entries.length, (i) {
-                  final isLast = i == entries.length - 1;
-                  return Column(
+      padding: const EdgeInsets.symmetric(horizontal: 10),
+      child: Column(
+        children: List.generate(entries.length, (index) {
+          final entry = entries[index];
+          final isLast = index == entries.length - 1;
+          return IntrinsicHeight(
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                SizedBox(
+                  width: 18,
+                  child: Column(
                     children: [
                       Container(
-                        width: 14,
-                        height: 14,
+                        width: 16,
+                        height: 16,
                         decoration: const BoxDecoration(
-                          color: Colors.black87,
+                          color: OnboardingPalette.purple,
                           shape: BoxShape.circle,
                         ),
                       ),
                       if (!isLast)
-                        Container(
-                          width: 3,
-                          height: 48,
-                          color: Colors.grey.shade400,
+                        Expanded(
+                          child: Container(
+                            width: 2,
+                            margin: const EdgeInsets.symmetric(vertical: 2),
+                            color: OnboardingPalette.palePurple,
+                          ),
                         ),
                     ],
-                  );
-                }),
-              ),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: entries.map((e) {
-                  return Padding(
-                    padding: const EdgeInsets.only(bottom: 28),
+                  ),
+                ),
+                const SizedBox(width: 14),
+                Expanded(
+                  child: Padding(
+                    padding: EdgeInsets.only(bottom: isLast ? 0 : 28),
                     child: Text(
-                      '${e.when} — ${e.text}',
-                      style: TextStyle(
-                        fontSize: (screenWidth * 0.035).clamp(12.0, 14.0),
-                        color: Colors.black87,
-                        height: 1.35,
+                      '${entry.when} — ${entry.text}',
+                      style: const TextStyle(
+                        color: OnboardingPalette.ink,
+                        fontSize: 13,
+                        height: 1.45,
+                        fontWeight: FontWeight.w500,
                       ),
                     ),
-                  );
-                }).toList(),
-              ),
+                  ),
+                ),
+              ],
             ),
-          ],
-        ),
+          );
+        }),
       ),
     );
   }
@@ -386,73 +416,118 @@ class _TimelineEntry {
 
 class _EvidencesSection extends StatelessWidget {
   final List<EvidenciaModel> evidencias;
+  final double sideOverflow;
 
-  const _EvidencesSection({required this.evidencias});
+  const _EvidencesSection({
+    required this.evidencias,
+    required this.sideOverflow,
+  });
 
   @override
   Widget build(BuildContext context) {
-    if (evidencias.isEmpty) {
-      return Container(
-        width: double.infinity,
-        padding: const EdgeInsets.all(14),
-        decoration: BoxDecoration(
-          color: const Color(0xFFF5F6F7),
-          borderRadius: BorderRadius.circular(18),
+    return Stack(
+      clipBehavior: Clip.none,
+      children: [
+        Padding(
+          padding: const EdgeInsets.only(right: 14),
+          child: evidencias.isEmpty
+              ? Container(
+                  key: const Key('case-empty-evidences'),
+                  width: double.infinity,
+                  constraints: const BoxConstraints(minHeight: 54),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 16,
+                  ),
+                  decoration: BoxDecoration(
+                    color: _softSurface,
+                    borderRadius: BorderRadius.circular(18),
+                    boxShadow: [
+                      BoxShadow(
+                        color: OnboardingPalette.purple.withValues(alpha: 0.06),
+                        blurRadius: 16,
+                        offset: const Offset(0, 6),
+                      ),
+                    ],
+                  ),
+                  child: const Text(
+                    'Aún no se han adjuntado evidencias a este caso.',
+                    style: TextStyle(
+                      color: OnboardingPalette.ink,
+                      fontSize: 13,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                )
+              : _EvidenceList(evidencias: evidencias),
         ),
-        child: const Text(
-          'Aún no se han adjuntado evidencias a este caso.',
-          style: TextStyle(color: Colors.black87, fontSize: 14),
-        ),
-      );
-    }
+        Positioned(right: -sideOverflow, top: -25, child: const _GuidanceTab()),
+      ],
+    );
+  }
+}
 
+class _EvidenceList extends StatelessWidget {
+  final List<EvidenciaModel> evidencias;
+
+  const _EvidenceList({required this.evidencias});
+
+  @override
+  Widget build(BuildContext context) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         const Text(
           'Evidencias adjuntas',
           style: TextStyle(
+            color: _ink,
             fontSize: 16,
-            fontWeight: FontWeight.w700,
-            color: Colors.black87,
+            fontWeight: FontWeight.w800,
           ),
         ),
-        const SizedBox(height: 8),
-        ...evidencias.map((e) => Padding(
-              padding: const EdgeInsets.only(bottom: 6),
-              child: Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-                decoration: BoxDecoration(
-                  color: Colors.grey.shade200,
-                  borderRadius: BorderRadius.circular(14),
+        const SizedBox(height: 9),
+        ...evidencias.map(
+          (evidence) => Container(
+            width: double.infinity,
+            margin: const EdgeInsets.only(bottom: 7),
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+            decoration: BoxDecoration(
+              color: _softSurface,
+              borderRadius: BorderRadius.circular(16),
+              boxShadow: [
+                BoxShadow(
+                  color: OnboardingPalette.purple.withValues(alpha: 0.06),
+                  blurRadius: 14,
+                  offset: const Offset(0, 5),
                 ),
-                child: Row(
-                  children: [
-                    Icon(_iconFor(e.tipoArchivo), size: 22),
-                    const SizedBox(width: 10),
-                    Expanded(
-                      child: Text(
-                        e.urlArchivo,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: const TextStyle(fontSize: 13),
-                      ),
-                    ),
-                  ],
+              ],
+            ),
+            child: Row(
+              children: [
+                Icon(_iconFor(evidence.tipoArchivo), size: 22, color: _ink),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Text(
+                    evidence.urlArchivo,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(fontSize: 13, color: _ink),
+                  ),
                 ),
-              ),
-            )),
+              ],
+            ),
+          ),
+        ),
       ],
     );
   }
 
-  IconData _iconFor(String? tipo) {
-    switch (tipo) {
+  IconData _iconFor(String? type) {
+    switch (type) {
       case 'image':
         return Icons.image_outlined;
       case 'audio':
-        return Icons.audiotrack;
+        return Icons.audiotrack_rounded;
       case 'video':
         return Icons.videocam_outlined;
       case 'pdf':
@@ -460,6 +535,41 @@ class _EvidencesSection extends StatelessWidget {
       default:
         return Icons.insert_drive_file_outlined;
     }
+  }
+}
+
+class _GuidanceTab extends StatelessWidget {
+  const _GuidanceTab();
+
+  @override
+  Widget build(BuildContext context) {
+    return Semantics(
+      label: 'Orientación disponible próximamente',
+      child: Container(
+        key: const Key('case-guidance-tab'),
+        width: 58,
+        height: 112,
+        decoration: const BoxDecoration(
+          color: OnboardingPalette.paleTeal,
+          borderRadius: BorderRadius.only(
+            topLeft: Radius.circular(26),
+            bottomLeft: Radius.circular(26),
+          ),
+          boxShadow: [
+            BoxShadow(
+              color: Color(0x18008B7C),
+              blurRadius: 16,
+              offset: Offset(-3, 5),
+            ),
+          ],
+        ),
+        child: const Icon(
+          Icons.chat_bubble_outline_rounded,
+          color: OnboardingPalette.teal,
+          size: 26,
+        ),
+      ),
+    );
   }
 }
 
@@ -477,12 +587,12 @@ class _CenteredMessage extends StatelessWidget {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(icon, size: 56, color: Colors.black54),
+            Icon(icon, size: 56, color: OnboardingPalette.purple),
             const SizedBox(height: 14),
             Text(
               text,
               textAlign: TextAlign.center,
-              style: const TextStyle(fontSize: 15, color: Colors.black87),
+              style: const TextStyle(fontSize: 15, color: _ink),
             ),
           ],
         ),
