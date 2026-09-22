@@ -499,6 +499,7 @@ void main() {
         responsableRepository: _Responsibles(),
         evidenciaRepository: _Evidence(),
       );
+      final captureKey = GlobalKey();
       addTearDown(report.dispose);
       addTearDown(status.dispose);
       await tester.pumpWidget(
@@ -507,7 +508,13 @@ void main() {
             ChangeNotifierProvider.value(value: report),
             ChangeNotifierProvider.value(value: status),
           ],
-          child: const MaterialApp(home: HomePage()),
+          child: MaterialApp(
+            builder: (context, child) => RepaintBoundary(
+              key: captureKey,
+              child: child!,
+            ),
+            home: const HomePage(),
+          ),
         ),
       );
       await tester.pumpAndSettle();
@@ -520,13 +527,40 @@ void main() {
 
       expect(find.byType(StateReportPage), findsOneWidget);
       expect(find.text('Estado del Radicado: ID-9832'), findsOneWidget);
+      expect(find.textContaining('sin caso registrado'), findsOneWidget);
       expect(
-        find.textContaining('no corresponde a un caso registrado'),
+        find.textContaining('Pendiente de revisión', findRichText: true),
         findsOneWidget,
+      );
+      expect(find.text('Responsable'), findsOneWidget);
+      expect(find.textContaining('Aún no se ha asignado'), findsOneWidget);
+      expect(find.textContaining('Última actualización'), findsOneWidget);
+      expect(find.textContaining('Denuncia recibida'), findsOneWidget);
+      expect(find.textContaining('Aún no se han adjuntado'), findsOneWidget);
+      expect(
+        tester.getRect(find.textContaining('Aún no se han adjuntado')).bottom,
+        lessThan(tester.getRect(find.byType(AppBottomBar)).top),
       );
       expect(status.snapshot?.isDemo, isTrue);
       expect(status.isLoading, isFalse);
       expect(tester.takeException(), isNull);
+
+      if (size == const Size(390, 844) &&
+          const bool.fromEnvironment('CAPTURE_STATUS_PREVIEW')) {
+        final boundary =
+            captureKey.currentContext!.findRenderObject()!
+                as RenderRepaintBoundary;
+        await tester.runAsync(() async {
+          final screenshot = await boundary.toImage(pixelRatio: 2);
+          final bytes = await screenshot.toByteData(
+            format: ui.ImageByteFormat.png,
+          );
+          final file = File('build/report_previews/status_demo.png');
+          await file.parent.create(recursive: true);
+          await file.writeAsBytes(bytes!.buffer.asUint8List());
+          screenshot.dispose();
+        });
+      }
     });
   }
 

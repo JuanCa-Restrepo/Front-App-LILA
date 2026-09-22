@@ -5,7 +5,6 @@ import 'package:provider/provider.dart';
 import '../../../data/models/caso_model.dart';
 import '../../../data/models/evidencia_model.dart';
 import '../../../data/models/responsable_model.dart';
-import '../../demo_case_code.dart';
 import '../../viewmodels/case_status_viewmodel.dart';
 import '../../widgets/app_bottom_bar.dart';
 import '../../widgets/side_chat.dart';
@@ -23,10 +22,10 @@ class StateReportPage extends StatelessWidget {
     final w = size.width;
     final h = size.height;
     final horizontalPadding = (w * 0.08).clamp(20.0, 34.0);
-    final titleSize = (w * 0.06).clamp(22.0, 28.0);
+    final titleSize = (w * 0.05).clamp(20.0, 24.0);
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF5F5F5),
+      backgroundColor: Colors.white,
       body: SafeArea(
         child: Stack(
           children: [
@@ -59,42 +58,59 @@ class StateReportPage extends StatelessWidget {
                     children: [
                       _Header(),
                       SizedBox(height: (h * 0.035).clamp(16.0, 32.0)),
-                      Text(
-                        'Estado del Radicado: ${snapshot.caso.codigoCaso}',
-                        style: TextStyle(
-                          fontSize: titleSize,
-                          fontWeight: FontWeight.w600,
-                          color: Colors.black87,
+                      if (snapshot.isDemo)
+                        FittedBox(
+                          fit: BoxFit.scaleDown,
+                          alignment: Alignment.centerLeft,
+                          child: Text(
+                            'Estado del Radicado: ${snapshot.caso.codigoCaso}',
+                            style: const TextStyle(
+                              fontSize: 24,
+                              fontWeight: FontWeight.w700,
+                              color: Colors.black87,
+                            ),
+                          ),
+                        )
+                      else
+                        Text(
+                          'Estado del Radicado: ${snapshot.caso.codigoCaso}',
+                          style: TextStyle(
+                            fontSize: titleSize,
+                            fontWeight: FontWeight.w700,
+                            color: Colors.black87,
+                          ),
                         ),
-                      ),
-                      SizedBox(height: (h * 0.045).clamp(20.0, 40.0)),
                       if (snapshot.isDemo) ...[
+                        const SizedBox(height: 8),
                         Container(
-                          width: double.infinity,
-                          padding: const EdgeInsets.all(16),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 12,
+                            vertical: 7,
+                          ),
                           decoration: BoxDecoration(
                             color: OnboardingPalette.paleTeal,
-                            borderRadius: BorderRadius.circular(18),
+                            borderRadius: BorderRadius.circular(12),
                           ),
-                          child: Text(
-                            'Vista de demostración. $demoCaseCode no corresponde a un caso registrado.',
-                            style: const TextStyle(
+                          child: const Text(
+                            'Vista de demostración · sin caso registrado',
+                            style: TextStyle(
                               color: OnboardingPalette.teal,
+                              fontSize: 12,
                               fontWeight: FontWeight.w700,
                             ),
                           ),
                         ),
-                        const SizedBox(height: 14),
+                        const SizedBox(height: 18),
+                      ] else ...[
+                        SizedBox(height: (h * 0.045).clamp(20.0, 40.0)),
                       ],
                       _StatusCard(estado: snapshot.caso.estado),
-                      if (!snapshot.isDemo) ...[
-                        const SizedBox(height: 14),
-                        _ResponsibleCard(responsable: snapshot.responsable),
-                        SizedBox(height: (h * 0.03).clamp(12.0, 24.0)),
-                        _Timeline(caso: snapshot.caso, screenWidth: w),
-                        SizedBox(height: (h * 0.035).clamp(14.0, 26.0)),
-                        _EvidencesSection(evidencias: snapshot.evidencias),
-                      ],
+                      const SizedBox(height: 14),
+                      _ResponsibleCard(responsable: snapshot.responsable),
+                      SizedBox(height: (h * 0.03).clamp(12.0, 24.0)),
+                      _Timeline(caso: snapshot.caso, screenWidth: w),
+                      SizedBox(height: (h * 0.035).clamp(14.0, 26.0)),
+                      _EvidencesSection(evidencias: snapshot.evidencias),
                     ],
                   ),
                 );
@@ -121,7 +137,7 @@ class _Header extends StatelessWidget {
             width: 42,
             height: 42,
             decoration: BoxDecoration(
-              color: Colors.grey.shade200,
+              color: const Color(0xFFF5F6F7),
               shape: BoxShape.circle,
             ),
             child: const Icon(Icons.arrow_back, color: Colors.black87),
@@ -142,7 +158,7 @@ class _Header extends StatelessWidget {
             width: 42,
             height: 42,
             decoration: BoxDecoration(
-              color: Colors.grey.shade200,
+              color: const Color(0xFFF5F6F7),
               shape: BoxShape.circle,
             ),
             child: const Icon(Icons.home_outlined, color: Colors.black87),
@@ -162,9 +178,9 @@ class _StatusCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 18),
       decoration: BoxDecoration(
-        color: Colors.grey.shade300,
+        color: const Color(0xFFE8E9EB),
         borderRadius: BorderRadius.circular(24),
       ),
       child: Row(
@@ -190,7 +206,7 @@ class _StatusCard extends StatelessWidget {
             width: 52,
             height: 52,
             decoration: BoxDecoration(
-              color: Colors.grey.shade200,
+              color: Colors.white,
               shape: BoxShape.circle,
             ),
             child: const Icon(Icons.history, size: 30, color: Colors.black87),
@@ -237,7 +253,7 @@ class _ResponsibleCard extends StatelessWidget {
     return Container(
       width: double.infinity,
       decoration: BoxDecoration(
-        color: Colors.grey.shade300,
+        color: const Color(0xFFE8E9EB),
         borderRadius: BorderRadius.circular(24),
       ),
       child: Column(
@@ -259,7 +275,7 @@ class _ResponsibleCard extends StatelessWidget {
             margin: const EdgeInsets.fromLTRB(8, 0, 8, 8),
             padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
             decoration: BoxDecoration(
-              color: Colors.grey.shade200,
+              color: const Color(0xFFF7F8F9),
               borderRadius: BorderRadius.circular(20),
             ),
             child: Text(
@@ -380,7 +396,7 @@ class _EvidencesSection extends StatelessWidget {
         width: double.infinity,
         padding: const EdgeInsets.all(14),
         decoration: BoxDecoration(
-          color: Colors.grey.shade200,
+          color: const Color(0xFFF5F6F7),
           borderRadius: BorderRadius.circular(18),
         ),
         child: const Text(

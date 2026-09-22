@@ -57,14 +57,16 @@ class CaseStatusViewModel extends BaseViewModel {
     final trimmed = codigoCaso.trim();
     if (trimmed.toUpperCase() == demoCaseCode) {
       clearError();
-      _snapshot = const CaseStatusSnapshot(
+      _snapshot = CaseStatusSnapshot(
         caso: CasoModel(
           idCaso: 'demo-9832',
           idUsuario: 'demo',
           idTipoAcoso: 0,
           codigoCaso: demoCaseCode,
           pasoInstitucion: false,
-          estado: 'demo',
+          estado: 'pendiente',
+          fechaReporte: DateTime(2026, 5, 8, 11, 1),
+          fechaActualizacion: DateTime(2026, 5, 8, 11, 1),
         ),
         isDemo: true,
       );
