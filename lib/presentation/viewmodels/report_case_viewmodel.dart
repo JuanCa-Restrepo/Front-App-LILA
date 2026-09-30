@@ -1,8 +1,11 @@
 import '../../core/services/auth_service.dart';
+import '../../core/services/device_service.dart';
 import '../../core/services/google_drive_uploader.dart';
 import '../../core/errors/app_exceptions.dart';
+import '../../data/dtos/registro_caso_dto.dart';
 import '../../domain/repositories/caso_repository.dart';
 import '../../domain/repositories/evidencia_repository.dart';
+import '../../domain/repositories/registro_caso_repository.dart';
 import 'base_view_model.dart';
 
 /// Categorías de "afectado" del Step 1 (mapean al campo `tipoUsuario`
@@ -45,18 +48,24 @@ class EvidenceDraft {
 class ReportCaseViewModel extends BaseViewModel {
   final CasoRepository _casoRepository;
   final EvidenciaRepository _evidenciaRepository;
+  final RegistroCasoRepository _registroCasoRepository;
   final GoogleDriveUploader _driveUploader;
   final AuthService _authService;
+  final DeviceService _deviceService;
 
   ReportCaseViewModel({
     required CasoRepository casoRepository,
     required EvidenciaRepository evidenciaRepository,
+    required RegistroCasoRepository registroCasoRepository,
     required GoogleDriveUploader driveUploader,
     required AuthService authService,
+    required DeviceService deviceService,
   }) : _casoRepository = casoRepository,
        _evidenciaRepository = evidenciaRepository,
+       _registroCasoRepository = registroCasoRepository,
        _driveUploader = driveUploader,
-       _authService = authService;
+       _authService = authService,
+       _deviceService = deviceService;
 
   // ===== Step 1 — datos del afectado =====
   AffectedPersonType _personType = AffectedPersonType.adolescente;
@@ -130,6 +139,7 @@ class ReportCaseViewModel extends BaseViewModel {
   String? get generatedCodigoCaso => _generatedCodigoCaso;
   String? _createdCaseCode;
   String? _createdCaseId;
+  bool _registrationCompleted = false;
   final Map<String, String> _uploadedEvidenceUrls = {};
 
   // ===== Validación previa al envío =====
@@ -177,19 +187,31 @@ class ReportCaseViewModel extends BaseViewModel {
         _createdCaseCode = created.codigoCaso;
       }
 
-      // Para enlazar evidencias necesitamos el `idCaso`. Lo recuperamos
-      // por el código que acabamos de obtener.
-      if (_pendingEvidences.isNotEmpty) {
-        if (_createdCaseId == null) {
-          final caso = await _casoRepository.findByCodigo(_createdCaseCode!);
-          _createdCaseId = caso?.idCaso;
-        }
-        if (_createdCaseId == null) {
-          throw const UnexpectedException(
-            'El caso fue creado, pero no se pudo asociar la evidencia. Reintenta el envío.',
-          );
-        }
+      // El endpoint de registro exige el UUID del caso ya creado.
+      if (_createdCaseId == null) {
+        final caso = await _casoRepository.findByCodigo(_createdCaseCode!);
+        _createdCaseId = caso?.idCaso;
+      }
+      if (_createdCaseId == null) {
+        throw const UnexpectedException(
+          'El caso fue creado, pero no se pudo completar su registro. Reintenta el envío.',
+        );
+      }
 
+      if (!_registrationCompleted) {
+        final deviceId = await _deviceService.getOrCreateDeviceId();
+        final registration = RegistroCasoDto(
+          deviceId: deviceId,
+          idCaso: _createdCaseId!,
+          sexoBiologico: _sexoBiologico,
+          orientacionGenero: _orientacionGenero?.trim(),
+          tipoUsuario: _personType.backendValue,
+        );
+        await _registroCasoRepository.register(registration);
+        _registrationCompleted = true;
+      }
+
+      if (_pendingEvidences.isNotEmpty) {
         for (final draft in List<EvidenceDraft>.of(_pendingEvidences)) {
           final evidenceKey = '${draft.localPath}|${draft.fileName ?? ''}';
           final url =
@@ -231,6 +253,7 @@ class ReportCaseViewModel extends BaseViewModel {
     _uploadedEvidenceUrls.clear();
     _createdCaseCode = null;
     _createdCaseId = null;
+    _registrationCompleted = false;
     _generatedCodigoCaso = null;
     clearError();
     notifyListeners();

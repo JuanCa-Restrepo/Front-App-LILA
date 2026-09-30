@@ -9,7 +9,7 @@ class ApiConstants {
   /// IP del PC donde corre el backend Node + puerto Express.
   static const String host = String.fromEnvironment(
     'LILA_API_HOST',
-    defaultValue: 'http://10.6.209.230:3000',
+    defaultValue: 'http://192.168.1.111:3001',
   );
 
   /// Prefijo común a todas las rutas REST.
@@ -22,6 +22,7 @@ class ApiConstants {
   static const String usuarios = '/usuarios';
   static const String tiposAcoso = '/tipos-acoso';
   static const String casos = '/casos';
+  static const String registroCaso = '/registro-caso';
   static const String responsables = '/responsables';
   static const String evidencias = '/evidencias';
 

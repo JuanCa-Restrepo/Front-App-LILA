@@ -8,17 +8,20 @@ import '../core/services/device_service.dart';
 import '../core/services/google_drive_uploader.dart';
 import '../data/datasources/caso_remote_datasource.dart';
 import '../data/datasources/evidencia_remote_datasource.dart';
+import '../data/datasources/registro_caso_remote_datasource.dart';
 import '../data/datasources/responsable_remote_datasource.dart';
 import '../data/datasources/tipo_acoso_local_datasource.dart';
 import '../data/datasources/tipo_acoso_remote_datasource.dart';
 import '../data/datasources/usuario_remote_datasource.dart';
 import '../data/repositories/caso_repository_impl.dart';
 import '../data/repositories/evidencia_repository_impl.dart';
+import '../data/repositories/registro_caso_repository_impl.dart';
 import '../data/repositories/responsable_repository_impl.dart';
 import '../data/repositories/tipo_acoso_repository_impl.dart';
 import '../data/repositories/usuario_repository_impl.dart';
 import '../domain/repositories/caso_repository.dart';
 import '../domain/repositories/evidencia_repository.dart';
+import '../domain/repositories/registro_caso_repository.dart';
 import '../domain/repositories/responsable_repository.dart';
 import '../domain/repositories/tipo_acoso_repository.dart';
 import '../domain/repositories/usuario_repository.dart';
@@ -77,6 +80,9 @@ class App extends StatelessWidget {
         Provider<EvidenciaRemoteDatasource>(
           create: (ctx) => EvidenciaRemoteDatasource(ctx.read<ApiClient>()),
         ),
+        Provider<RegistroCasoRemoteDatasource>(
+          create: (ctx) => RegistroCasoRemoteDatasource(ctx.read<ApiClient>()),
+        ),
 
         // ==================================================
         // 3) Repositorios — expuestos como interface
@@ -102,6 +108,11 @@ class App extends StatelessWidget {
         Provider<EvidenciaRepository>(
           create: (ctx) =>
               EvidenciaRepositoryImpl(ctx.read<EvidenciaRemoteDatasource>()),
+        ),
+        Provider<RegistroCasoRepository>(
+          create: (ctx) => RegistroCasoRepositoryImpl(
+            ctx.read<RegistroCasoRemoteDatasource>(),
+          ),
         ),
 
         // ==================================================
@@ -139,8 +150,10 @@ class App extends StatelessWidget {
           create: (ctx) => ReportCaseViewModel(
             casoRepository: ctx.read<CasoRepository>(),
             evidenciaRepository: ctx.read<EvidenciaRepository>(),
+            registroCasoRepository: ctx.read<RegistroCasoRepository>(),
             driveUploader: ctx.read<GoogleDriveUploader>(),
             authService: ctx.read<AuthService>(),
+            deviceService: ctx.read<DeviceService>(),
           ),
         ),
         ChangeNotifierProvider(

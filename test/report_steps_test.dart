@@ -9,9 +9,11 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:mockups/data/models/tipo_acoso_model.dart';
 import 'package:provider/provider.dart';
 import 'package:mockups/core/services/auth_service.dart';
+import 'package:mockups/core/services/device_service.dart';
 import 'package:mockups/core/services/google_drive_uploader.dart';
 import 'package:mockups/domain/repositories/caso_repository.dart';
 import 'package:mockups/domain/repositories/evidencia_repository.dart';
+import 'package:mockups/domain/repositories/registro_caso_repository.dart';
 import 'package:mockups/domain/repositories/tipo_acoso_repository.dart';
 import 'package:mockups/presentation/viewmodels/report_case_viewmodel.dart';
 import 'package:mockups/presentation/viewmodels/tipo_acoso_viewmodel.dart';
@@ -25,6 +27,8 @@ import 'package:mockups/presentation/widgets/app_bottom_bar.dart';
 class _Cases extends Fake implements CasoRepository {}
 
 class _Evidence extends Fake implements EvidenciaRepository {}
+
+class _Registration extends Fake implements RegistroCasoRepository {}
 
 class _Catalog implements TipoAcosoRepository {
   Future<List<TipoAcosoModel>> Function()? fetch;
@@ -42,8 +46,10 @@ class _Catalog implements TipoAcosoRepository {
 ReportCaseViewModel _report() => ReportCaseViewModel(
   casoRepository: _Cases(),
   evidenciaRepository: _Evidence(),
+  registroCasoRepository: _Registration(),
   driveUploader: const GoogleDriveUploaderStub(),
   authService: const AuthService(FlutterSecureStorage()),
+  deviceService: const DeviceService(FlutterSecureStorage()),
 );
 
 Widget _app(

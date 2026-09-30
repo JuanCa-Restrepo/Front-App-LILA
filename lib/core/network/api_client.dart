@@ -4,6 +4,7 @@ import '../constants/api_constants.dart';
 import '../errors/app_exceptions.dart';
 import 'error_interceptor.dart';
 import 'logger_interceptor.dart';
+import 'response_envelope_interceptor.dart';
 
 /// Wrapper sobre Dio. Centraliza la configuración (baseUrl, timeouts,
 /// interceptores) y desempaqueta automáticamente los errores: cada
@@ -30,7 +31,11 @@ class ApiClient {
       ),
     );
 
-    dio.interceptors.addAll([LoggerInterceptor(), ErrorInterceptor()]);
+    dio.interceptors.addAll([
+      LoggerInterceptor(),
+      ResponseEnvelopeInterceptor(),
+      ErrorInterceptor(),
+    ]);
 
     return ApiClient._(dio);
   }
